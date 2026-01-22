@@ -2,4 +2,18 @@
 .clasp.json
 dist
 node_modules/
+.env
+
+# GraphRAG generated artifacts
+parquet/output/
+parquet/cache/
+parquet/logs/
+parquet/update_output/
+parquet/output.lancedb/
+parquet/output/lancedb/
+parquet/**/*.parquet
+
+# If input contains private data, ignore it too
+#parquet/input/
+
 
