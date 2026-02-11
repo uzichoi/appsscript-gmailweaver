@@ -4,12 +4,14 @@ import subprocess
 import time
 import sys
 from flask import Flask, request, jsonify
+import requests
 # jsonify는 파이썬 객체(dict, list 등)를
 #HTTP 응답으로 쓸 수 있는 “JSON 형식 + 헤더”로 자동 변환해주는 Flask 도구
 from flask_cors import CORS
 # from gmail import getFirstMail  
 # 
 
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzqtWOG4Vz25W36sfYYahsbDOf2UGSwODZYDXQbGDMurN5NuXbKfyWbyItgi3LX7wHBFg/exec"
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if hasattr(sys.stderr, "reconfigure"):
@@ -60,6 +62,9 @@ def run_query():
         message
     ]
 
+    @app.post("/relay")
+
+
     def decode_output(b: bytes) -> str:
         """stdout/stderr 바이트를 안전하게 문자열로 변환"""
         if not b:
@@ -102,6 +107,8 @@ def run_query():
     answer = re.sub(r'\[Data:.*?\]\s*|\[데이터:.*?\]\s*|\*.*?\*\s*|#', '', answer)  # [Data: ...] 및 *...* 제거
     print(answer)
   
+    if resType.lower() in ("json", "json-only", "calendar-json"):
+        return jsonify({'result': answer})
     # #test용  answer
     # answer = "hi!!!!!!!"
 
@@ -117,6 +124,24 @@ def upload():
         f.write(data["content"])
     return {"ok": True}
 
+def relay():
+    data = request.json
+
+    # 🔎 여기서 검증/로깅 가능
+    print("FROM BROWSER:", data)
+
+    # 👉 Apps Script Web App으로 전달
+    res = requests.post(
+        WEBAPP_URL,
+        json={
+            "token": data.get("token"),
+        },
+        timeout=10,
+    )
+
+    return jsonify({
+        "fromAppsScript": res.json()
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)
