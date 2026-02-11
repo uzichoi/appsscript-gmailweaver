@@ -1,16 +1,38 @@
 {
-  "name": "cats-add-on-sample",
+  "name": "gmail-network-graph",
   "version": "1.0.0",
-  "description": "Sample G Suite add-on",
+  "description": "Gmail Network Graph with React",
   "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "build:inline": "react-scripts build && inline-source --root build build/index.html > build/inline.html",
     "lint": "eslint -c .eslintrc.json src/*.js",
     "lint:fix": "eslint -c .eslintrc.json --fix src/*.js"
   },
   "author": "Eric Koleda",
   "license": "Apache-2.0",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "d3": "^7.8.5"
+  },
   "devDependencies": {
     "@google/clasp": "^2.3.0",
     "eslint": "^6.8.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint-config-google": "^0.14.0",
+    "react-scripts": "^5.0.1",
+    "inline-source-cli": "^2.0.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

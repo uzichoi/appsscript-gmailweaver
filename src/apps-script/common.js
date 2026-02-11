@@ -1,6 +1,6 @@
 var MAX_MESSAGE_LENGTH = 40;
-var TunnelURL = "https://interatrial-tana-wishfully.ngrok-free.dev"; // 테스트 할때 마다 수시로 변경
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz47Iaiy3mbvfCeFRHF2Co4I6fn2AYkvDmz_F9ciKgPxR2JId4fNHM-HURUsPRVQjOc/exec";
+var TunnelURL = "https://unmatching-sandy-hydrocinnamyl.ngrok-free.dev"; // 테스트 할때 마다 수시로 변경
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwnEEYxJvAzGDrhEl5iY9PL79W60ZDTCKjreHXWbXjt/dev";
 
 
 function onHomepage(e) {
