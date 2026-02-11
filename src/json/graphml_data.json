@@ -1,840 +1,691 @@
 {
-    "nodes": [
-        {
-            "id": "\ubb38\uc778\uc120",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "DDYR1554@GMAIL.COM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "STIRLING\uc0bd\uc785.JPG",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "\uc9c0\uae08\ubd80\ud130 LLM\uc5d0 \ub300\ud574\uc11c \uc124\uba85\uc744 \uc2dc\uc791\ud558\uaca0\uc2b5\ub2c8\ub2e4.HWPX",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "01.PDF",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "GOOGLE",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "SUNTEST225@GMAIL.COM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "GOOGLE LLC",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "MOUNTAIN VIEW",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "CA",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "USA",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "NEO4J",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "AURADB TEAM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "ADAM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "KOREAN STANDARD TIME",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "PDF EDITOR OPENSOURCE",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "KAGGLE",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "GITHUB",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "CONCAR DR, SAN MATEO, CA 94402",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "AURA@NEO4J.COM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "GRAPHACADEMY",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "DEVELOPER RELATIONS TEAM",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "BEGINNERS COURSES",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "DATA SCIENTIST",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "DEVELOPER",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "DISCORD",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "SAN MATEO",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "NGROK INC.",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "SAN FRANCISCO",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "CALIFORNIA",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "UNITED STATES",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "TEAM @ NGROK",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "CLASP - THE APPS SCRIPT CLI",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "GMAIL DRIVE CATS",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "APPS SCRIPT CLI",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "PARKWAY",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        },
-        {
-            "id": "94043",
-            "level": null,
-            "human_readable_id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null,
-            "cluster": null,
-            "entity_type": null,
-            "degree": null,
-            "type": null
-        }
-    ],
-    "edges": [
-        {
-            "source": "\ubb38\uc778\uc120",
-            "target": "DDYR1554@GMAIL.COM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "\ubb38\uc778\uc120",
-            "target": "STIRLING\uc0bd\uc785.JPG",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "\ubb38\uc778\uc120",
-            "target": "\uc9c0\uae08\ubd80\ud130 LLM\uc5d0 \ub300\ud574\uc11c \uc124\uba85\uc744 \uc2dc\uc791\ud558\uaca0\uc2b5\ub2c8\ub2e4.HWPX",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "\ubb38\uc778\uc120",
-            "target": "01.PDF",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE",
-            "target": "SUNTEST225@GMAIL.COM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE",
-            "target": "CLASP - THE APPS SCRIPT CLI",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE",
-            "target": "GMAIL DRIVE CATS",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE",
-            "target": "APPS SCRIPT CLI",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "SUNTEST225@GMAIL.COM",
-            "target": "NEO4J",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "SUNTEST225@GMAIL.COM",
-            "target": "KOREAN STANDARD TIME",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE LLC",
-            "target": "MOUNTAIN VIEW",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE LLC",
-            "target": "CA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GOOGLE LLC",
-            "target": "USA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "MOUNTAIN VIEW",
-            "target": "PARKWAY",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "MOUNTAIN VIEW",
-            "target": "CA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "MOUNTAIN VIEW",
-            "target": "USA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "CA",
-            "target": "USA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "USA",
-            "target": "PARKWAY",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "AURADB TEAM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "ADAM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "KOREAN STANDARD TIME",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "PDF EDITOR OPENSOURCE",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "KAGGLE",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "GITHUB",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "CONCAR DR, SAN MATEO, CA 94402",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "AURA@NEO4J.COM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "GRAPHACADEMY",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "DEVELOPER RELATIONS TEAM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NEO4J",
-            "target": "BEGINNERS COURSES",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "AURADB TEAM",
-            "target": "ADAM",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "AURADB TEAM",
-            "target": "SAN MATEO",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GRAPHACADEMY",
-            "target": "DATA SCIENTIST",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GRAPHACADEMY",
-            "target": "DEVELOPER",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "GRAPHACADEMY",
-            "target": "DISCORD",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NGROK INC.",
-            "target": "SAN FRANCISCO",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NGROK INC.",
-            "target": "CALIFORNIA",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NGROK INC.",
-            "target": "UNITED STATES",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "NGROK INC.",
-            "target": "TEAM @ NGROK",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        },
-        {
-            "source": "PARKWAY",
-            "target": "94043",
-            "level": null,
-            "human_readable_id": null,
-            "id": null,
-            "source_id": null,
-            "description": null,
-            "weight": null
-        }
-    ]
+  "nodes": [
+    {
+      "id": "인선아 안뇽",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"인선아 안뇽\"."
+    },
+    {
+      "id": "김예은",
+      "type": "PERSON",
+      "description": "김예은 is a person appearing in the emails (sender)."
+    },
+    {
+      "id": "Seamlessly import data into AuraDB",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"Seamlessly import data into AuraDB\"."
+    },
+    {
+      "id": "The Neo4j Team",
+      "type": "ORGANIZATION",
+      "description": "The Neo4j Team is an organization appearing in the emails."
+    },
+    {
+      "id": "한글파일 첨부",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"한글파일 첨부\"."
+    },
+    {
+      "id": "문인선",
+      "type": "PERSON",
+      "description": "문인선 is a person appearing in the emails (sender)."
+    },
+    {
+      "id": "ddyr1554@gmail.com",
+      "type": "PERSON",
+      "description": "ddyr1554@gmail.com is a person appearing in the emails (recipient)."
+    },
+    {
+      "id": "Stirling삽입.JPG",
+      "type": "FILE",
+      "description": "\"Stirling삽입.JPG\" is attached to the email titled \"한글파일 첨부\"."
+    },
+    {
+      "id": "지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx",
+      "type": "FILE",
+      "description": "\"지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx\" is attached to the email titled \"한글파일 첨부\"."
+    },
+    {
+      "id": "광고!!",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"광고!!\"."
+    },
+    {
+      "id": "발신 pdf",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"발신 pdf\"."
+    },
+    {
+      "id": "01.pdf",
+      "type": "FILE",
+      "description": "\"01.pdf\" is attached to the email titled \"발신 pdf\"."
+    },
+    {
+      "id": "발신1",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"발신1\"."
+    },
+    {
+      "id": "보안 알림",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"보안 알림\"."
+    },
+    {
+      "id": "Google",
+      "type": "ORGANIZATION",
+      "description": "Google is an organization appearing in the emails."
+    },
+    {
+      "id": "테스트용",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"테스트용\"."
+    },
+    {
+      "id": "pdf,메일.hwpx",
+      "type": "FILE",
+      "description": "\"pdf,메일.hwpx\" is attached to the email titled \"테스트용\"."
+    },
+    {
+      "id": "논문 첨부",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"논문 첨부\"."
+    },
+    {
+      "id": "Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf",
+      "type": "FILE",
+      "description": "\"Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf\" is attached to the email titled \"논문 첨부\"."
+    },
+    {
+      "id": "한글파일",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"한글파일\"."
+    },
+    {
+      "id": "PDF Editor OpenSource 종류와 특징.hwpx",
+      "type": "FILE",
+      "description": "\"PDF Editor OpenSource 종류와 특징.hwpx\" is attached to the email titled \"한글파일\"."
+    },
+    {
+      "id": "Easiest way to create a graph database",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"Easiest way to create a graph database\"."
+    },
+    {
+      "id": "Unlock the Full Potential of Neo4j Aura with GraphAcademy👋",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"Unlock the Full Potential of Neo4j Aura with GraphAcademy👋\"."
+    },
+    {
+      "id": "Welcome to ngrok!",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"Welcome to ngrok!\"."
+    },
+    {
+      "id": "ngrok team",
+      "type": "ORGANIZATION",
+      "description": "ngrok team is an organization appearing in the emails."
+    },
+    {
+      "id": "a21",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a21\"."
+    },
+    {
+      "id": "a20",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a20\"."
+    },
+    {
+      "id": "a12",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a12\"."
+    },
+    {
+      "id": "a4",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a4\"."
+    },
+    {
+      "id": "suntest225@gmail.com",
+      "type": "PERSON",
+      "description": "suntest225@gmail.com is a person appearing in the emails (recipient)."
+    },
+    {
+      "id": "a3",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a3\"."
+    },
+    {
+      "id": "a2",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a2\"."
+    },
+    {
+      "id": "a1",
+      "type": "SUBJECT",
+      "description": "This is an email subject: \"a1\"."
+    }
+  ],
+  "edges": [
+    {
+      "id": "김예은__RELATES_TO__인선아 안뇽",
+      "source": "김예은",
+      "target": "인선아 안뇽",
+      "from": "김예은",
+      "to": "인선아 안뇽",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "김예은 is associated with the email subject \"인선아 안뇽\".",
+      "label": "김예은 is associated with the email subject \"인선아 안뇽\".",
+      "title": "김예은 is associated with the email subject \"인선아 안뇽\".",
+      "tooltip": "김예은 is associated with the email subject \"인선아 안뇽\"."
+    },
+    {
+      "id": "The Neo4j Team__RELATES_TO__Seamlessly import data into AuraDB",
+      "source": "The Neo4j Team",
+      "target": "Seamlessly import data into AuraDB",
+      "from": "The Neo4j Team",
+      "to": "Seamlessly import data into AuraDB",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "The Neo4j Team is associated with the email subject \"Seamlessly import data into AuraDB\".",
+      "label": "The Neo4j Team is associated with the email subject \"Seamlessly import data into AuraDB\".",
+      "title": "The Neo4j Team is associated with the email subject \"Seamlessly import data into AuraDB\".",
+      "tooltip": "The Neo4j Team is associated with the email subject \"Seamlessly import data into AuraDB\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__ddyr1554@gmail.com",
+      "source": "문인선",
+      "target": "ddyr1554@gmail.com",
+      "from": "문인선",
+      "to": "ddyr1554@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to ddyr1554@gmail.com about \"한글파일 첨부\".",
+      "label": "문인선 sent an email to ddyr1554@gmail.com about \"한글파일 첨부\".",
+      "title": "문인선 sent an email to ddyr1554@gmail.com about \"한글파일 첨부\".",
+      "tooltip": "문인선 sent an email to ddyr1554@gmail.com about \"한글파일 첨부\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__한글파일 첨부",
+      "source": "문인선",
+      "target": "한글파일 첨부",
+      "from": "문인선",
+      "to": "한글파일 첨부",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"한글파일 첨부\".",
+      "label": "문인선 is associated with the email subject \"한글파일 첨부\".",
+      "title": "문인선 is associated with the email subject \"한글파일 첨부\".",
+      "tooltip": "문인선 is associated with the email subject \"한글파일 첨부\"."
+    },
+    {
+      "id": "ddyr1554@gmail.com__RELATES_TO__한글파일 첨부",
+      "source": "ddyr1554@gmail.com",
+      "target": "한글파일 첨부",
+      "from": "ddyr1554@gmail.com",
+      "to": "한글파일 첨부",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "ddyr1554@gmail.com is associated with the email subject \"한글파일 첨부\".",
+      "label": "ddyr1554@gmail.com is associated with the email subject \"한글파일 첨부\".",
+      "title": "ddyr1554@gmail.com is associated with the email subject \"한글파일 첨부\".",
+      "tooltip": "ddyr1554@gmail.com is associated with the email subject \"한글파일 첨부\"."
+    },
+    {
+      "id": "한글파일 첨부__RELATES_TO__Stirling삽입.JPG",
+      "source": "한글파일 첨부",
+      "target": "Stirling삽입.JPG",
+      "from": "한글파일 첨부",
+      "to": "Stirling삽입.JPG",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"한글파일 첨부\" includes attachment: \"Stirling삽입.JPG\".",
+      "label": "Email titled \"한글파일 첨부\" includes attachment: \"Stirling삽입.JPG\".",
+      "title": "Email titled \"한글파일 첨부\" includes attachment: \"Stirling삽입.JPG\".",
+      "tooltip": "Email titled \"한글파일 첨부\" includes attachment: \"Stirling삽입.JPG\"."
+    },
+    {
+      "id": "한글파일 첨부__RELATES_TO__지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx",
+      "source": "한글파일 첨부",
+      "target": "지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx",
+      "from": "한글파일 첨부",
+      "to": "지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"한글파일 첨부\" includes attachment: \"지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx\".",
+      "label": "Email titled \"한글파일 첨부\" includes attachment: \"지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx\".",
+      "title": "Email titled \"한글파일 첨부\" includes attachment: \"지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx\".",
+      "tooltip": "Email titled \"한글파일 첨부\" includes attachment: \"지금부터 LLM에 대해서 설명을 시작하겠습니다.hwpx\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__ddyr1554@gmail.com",
+      "source": "문인선",
+      "target": "ddyr1554@gmail.com",
+      "from": "문인선",
+      "to": "ddyr1554@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to ddyr1554@gmail.com about \"광고!!\".",
+      "label": "문인선 sent an email to ddyr1554@gmail.com about \"광고!!\".",
+      "title": "문인선 sent an email to ddyr1554@gmail.com about \"광고!!\".",
+      "tooltip": "문인선 sent an email to ddyr1554@gmail.com about \"광고!!\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__광고!!",
+      "source": "문인선",
+      "target": "광고!!",
+      "from": "문인선",
+      "to": "광고!!",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"광고!!\".",
+      "label": "문인선 is associated with the email subject \"광고!!\".",
+      "title": "문인선 is associated with the email subject \"광고!!\".",
+      "tooltip": "문인선 is associated with the email subject \"광고!!\"."
+    },
+    {
+      "id": "ddyr1554@gmail.com__RELATES_TO__광고!!",
+      "source": "ddyr1554@gmail.com",
+      "target": "광고!!",
+      "from": "ddyr1554@gmail.com",
+      "to": "광고!!",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "ddyr1554@gmail.com is associated with the email subject \"광고!!\".",
+      "label": "ddyr1554@gmail.com is associated with the email subject \"광고!!\".",
+      "title": "ddyr1554@gmail.com is associated with the email subject \"광고!!\".",
+      "tooltip": "ddyr1554@gmail.com is associated with the email subject \"광고!!\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__ddyr1554@gmail.com",
+      "source": "문인선",
+      "target": "ddyr1554@gmail.com",
+      "from": "문인선",
+      "to": "ddyr1554@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to ddyr1554@gmail.com about \"발신 pdf\".",
+      "label": "문인선 sent an email to ddyr1554@gmail.com about \"발신 pdf\".",
+      "title": "문인선 sent an email to ddyr1554@gmail.com about \"발신 pdf\".",
+      "tooltip": "문인선 sent an email to ddyr1554@gmail.com about \"발신 pdf\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__발신 pdf",
+      "source": "문인선",
+      "target": "발신 pdf",
+      "from": "문인선",
+      "to": "발신 pdf",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"발신 pdf\".",
+      "label": "문인선 is associated with the email subject \"발신 pdf\".",
+      "title": "문인선 is associated with the email subject \"발신 pdf\".",
+      "tooltip": "문인선 is associated with the email subject \"발신 pdf\"."
+    },
+    {
+      "id": "ddyr1554@gmail.com__RELATES_TO__발신 pdf",
+      "source": "ddyr1554@gmail.com",
+      "target": "발신 pdf",
+      "from": "ddyr1554@gmail.com",
+      "to": "발신 pdf",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "ddyr1554@gmail.com is associated with the email subject \"발신 pdf\".",
+      "label": "ddyr1554@gmail.com is associated with the email subject \"발신 pdf\".",
+      "title": "ddyr1554@gmail.com is associated with the email subject \"발신 pdf\".",
+      "tooltip": "ddyr1554@gmail.com is associated with the email subject \"발신 pdf\"."
+    },
+    {
+      "id": "발신 pdf__RELATES_TO__01.pdf",
+      "source": "발신 pdf",
+      "target": "01.pdf",
+      "from": "발신 pdf",
+      "to": "01.pdf",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"발신 pdf\" includes attachment: \"01.pdf\".",
+      "label": "Email titled \"발신 pdf\" includes attachment: \"01.pdf\".",
+      "title": "Email titled \"발신 pdf\" includes attachment: \"01.pdf\".",
+      "tooltip": "Email titled \"발신 pdf\" includes attachment: \"01.pdf\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__ddyr1554@gmail.com",
+      "source": "문인선",
+      "target": "ddyr1554@gmail.com",
+      "from": "문인선",
+      "to": "ddyr1554@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to ddyr1554@gmail.com about \"발신1\".",
+      "label": "문인선 sent an email to ddyr1554@gmail.com about \"발신1\".",
+      "title": "문인선 sent an email to ddyr1554@gmail.com about \"발신1\".",
+      "tooltip": "문인선 sent an email to ddyr1554@gmail.com about \"발신1\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__발신1",
+      "source": "문인선",
+      "target": "발신1",
+      "from": "문인선",
+      "to": "발신1",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"발신1\".",
+      "label": "문인선 is associated with the email subject \"발신1\".",
+      "title": "문인선 is associated with the email subject \"발신1\".",
+      "tooltip": "문인선 is associated with the email subject \"발신1\"."
+    },
+    {
+      "id": "ddyr1554@gmail.com__RELATES_TO__발신1",
+      "source": "ddyr1554@gmail.com",
+      "target": "발신1",
+      "from": "ddyr1554@gmail.com",
+      "to": "발신1",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "ddyr1554@gmail.com is associated with the email subject \"발신1\".",
+      "label": "ddyr1554@gmail.com is associated with the email subject \"발신1\".",
+      "title": "ddyr1554@gmail.com is associated with the email subject \"발신1\".",
+      "tooltip": "ddyr1554@gmail.com is associated with the email subject \"발신1\"."
+    },
+    {
+      "id": "Google__RELATES_TO__보안 알림",
+      "source": "Google",
+      "target": "보안 알림",
+      "from": "Google",
+      "to": "보안 알림",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Google is associated with the email subject \"보안 알림\".",
+      "label": "Google is associated with the email subject \"보안 알림\".",
+      "title": "Google is associated with the email subject \"보안 알림\".",
+      "tooltip": "Google is associated with the email subject \"보안 알림\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__테스트용",
+      "source": "문인선",
+      "target": "테스트용",
+      "from": "문인선",
+      "to": "테스트용",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"테스트용\".",
+      "label": "문인선 is associated with the email subject \"테스트용\".",
+      "title": "문인선 is associated with the email subject \"테스트용\".",
+      "tooltip": "문인선 is associated with the email subject \"테스트용\"."
+    },
+    {
+      "id": "테스트용__RELATES_TO__pdf,메일.hwpx",
+      "source": "테스트용",
+      "target": "pdf,메일.hwpx",
+      "from": "테스트용",
+      "to": "pdf,메일.hwpx",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"테스트용\" includes attachment: \"pdf,메일.hwpx\".",
+      "label": "Email titled \"테스트용\" includes attachment: \"pdf,메일.hwpx\".",
+      "title": "Email titled \"테스트용\" includes attachment: \"pdf,메일.hwpx\".",
+      "tooltip": "Email titled \"테스트용\" includes attachment: \"pdf,메일.hwpx\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__논문 첨부",
+      "source": "문인선",
+      "target": "논문 첨부",
+      "from": "문인선",
+      "to": "논문 첨부",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"논문 첨부\".",
+      "label": "문인선 is associated with the email subject \"논문 첨부\".",
+      "title": "문인선 is associated with the email subject \"논문 첨부\".",
+      "tooltip": "문인선 is associated with the email subject \"논문 첨부\"."
+    },
+    {
+      "id": "논문 첨부__RELATES_TO__Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf",
+      "source": "논문 첨부",
+      "target": "Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf",
+      "from": "논문 첨부",
+      "to": "Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"논문 첨부\" includes attachment: \"Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf\".",
+      "label": "Email titled \"논문 첨부\" includes attachment: \"Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf\".",
+      "title": "Email titled \"논문 첨부\" includes attachment: \"Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf\".",
+      "tooltip": "Email titled \"논문 첨부\" includes attachment: \"Your Smartphone Knows Who You Are and What You're Doing - Bloomberg.pdf\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__한글파일",
+      "source": "문인선",
+      "target": "한글파일",
+      "from": "문인선",
+      "to": "한글파일",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"한글파일\".",
+      "label": "문인선 is associated with the email subject \"한글파일\".",
+      "title": "문인선 is associated with the email subject \"한글파일\".",
+      "tooltip": "문인선 is associated with the email subject \"한글파일\"."
+    },
+    {
+      "id": "한글파일__RELATES_TO__PDF Editor OpenSource 종류와 특징.hwpx",
+      "source": "한글파일",
+      "target": "PDF Editor OpenSource 종류와 특징.hwpx",
+      "from": "한글파일",
+      "to": "PDF Editor OpenSource 종류와 특징.hwpx",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "Email titled \"한글파일\" includes attachment: \"PDF Editor OpenSource 종류와 특징.hwpx\".",
+      "label": "Email titled \"한글파일\" includes attachment: \"PDF Editor OpenSource 종류와 특징.hwpx\".",
+      "title": "Email titled \"한글파일\" includes attachment: \"PDF Editor OpenSource 종류와 특징.hwpx\".",
+      "tooltip": "Email titled \"한글파일\" includes attachment: \"PDF Editor OpenSource 종류와 특징.hwpx\"."
+    },
+    {
+      "id": "The Neo4j Team__RELATES_TO__Easiest way to create a graph database",
+      "source": "The Neo4j Team",
+      "target": "Easiest way to create a graph database",
+      "from": "The Neo4j Team",
+      "to": "Easiest way to create a graph database",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "The Neo4j Team is associated with the email subject \"Easiest way to create a graph database\".",
+      "label": "The Neo4j Team is associated with the email subject \"Easiest way to create a graph database\".",
+      "title": "The Neo4j Team is associated with the email subject \"Easiest way to create a graph database\".",
+      "tooltip": "The Neo4j Team is associated with the email subject \"Easiest way to create a graph database\"."
+    },
+    {
+      "id": "The Neo4j Team__RELATES_TO__Unlock the Full Potential of Neo4j Aura with GraphAcademy👋",
+      "source": "The Neo4j Team",
+      "target": "Unlock the Full Potential of Neo4j Aura with GraphAcademy👋",
+      "from": "The Neo4j Team",
+      "to": "Unlock the Full Potential of Neo4j Aura with GraphAcademy👋",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "The Neo4j Team is associated with the email subject \"Unlock the Full Potential of Neo4j Aura with GraphAcademy👋\".",
+      "label": "The Neo4j Team is associated with the email subject \"Unlock the Full Potential of Neo4j Aura with GraphAcademy👋\".",
+      "title": "The Neo4j Team is associated with the email subject \"Unlock the Full Potential of Neo4j Aura with GraphAcademy👋\".",
+      "tooltip": "The Neo4j Team is associated with the email subject \"Unlock the Full Potential of Neo4j Aura with GraphAcademy👋\"."
+    },
+    {
+      "id": "ngrok team__RELATES_TO__Welcome to ngrok!",
+      "source": "ngrok team",
+      "target": "Welcome to ngrok!",
+      "from": "ngrok team",
+      "to": "Welcome to ngrok!",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "ngrok team is associated with the email subject \"Welcome to ngrok!\".",
+      "label": "ngrok team is associated with the email subject \"Welcome to ngrok!\".",
+      "title": "ngrok team is associated with the email subject \"Welcome to ngrok!\".",
+      "tooltip": "ngrok team is associated with the email subject \"Welcome to ngrok!\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a21",
+      "source": "문인선",
+      "target": "a21",
+      "from": "문인선",
+      "to": "a21",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a21\".",
+      "label": "문인선 is associated with the email subject \"a21\".",
+      "title": "문인선 is associated with the email subject \"a21\".",
+      "tooltip": "문인선 is associated with the email subject \"a21\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a20",
+      "source": "문인선",
+      "target": "a20",
+      "from": "문인선",
+      "to": "a20",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a20\".",
+      "label": "문인선 is associated with the email subject \"a20\".",
+      "title": "문인선 is associated with the email subject \"a20\".",
+      "tooltip": "문인선 is associated with the email subject \"a20\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a12",
+      "source": "문인선",
+      "target": "a12",
+      "from": "문인선",
+      "to": "a12",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a12\".",
+      "label": "문인선 is associated with the email subject \"a12\".",
+      "title": "문인선 is associated with the email subject \"a12\".",
+      "tooltip": "문인선 is associated with the email subject \"a12\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__suntest225@gmail.com",
+      "source": "문인선",
+      "target": "suntest225@gmail.com",
+      "from": "문인선",
+      "to": "suntest225@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to suntest225@gmail.com about \"a4\".",
+      "label": "문인선 sent an email to suntest225@gmail.com about \"a4\".",
+      "title": "문인선 sent an email to suntest225@gmail.com about \"a4\".",
+      "tooltip": "문인선 sent an email to suntest225@gmail.com about \"a4\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a4",
+      "source": "문인선",
+      "target": "a4",
+      "from": "문인선",
+      "to": "a4",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a4\".",
+      "label": "문인선 is associated with the email subject \"a4\".",
+      "title": "문인선 is associated with the email subject \"a4\".",
+      "tooltip": "문인선 is associated with the email subject \"a4\"."
+    },
+    {
+      "id": "suntest225@gmail.com__RELATES_TO__a4",
+      "source": "suntest225@gmail.com",
+      "target": "a4",
+      "from": "suntest225@gmail.com",
+      "to": "a4",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "suntest225@gmail.com is associated with the email subject \"a4\".",
+      "label": "suntest225@gmail.com is associated with the email subject \"a4\".",
+      "title": "suntest225@gmail.com is associated with the email subject \"a4\".",
+      "tooltip": "suntest225@gmail.com is associated with the email subject \"a4\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__suntest225@gmail.com",
+      "source": "문인선",
+      "target": "suntest225@gmail.com",
+      "from": "문인선",
+      "to": "suntest225@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to suntest225@gmail.com about \"a3\".",
+      "label": "문인선 sent an email to suntest225@gmail.com about \"a3\".",
+      "title": "문인선 sent an email to suntest225@gmail.com about \"a3\".",
+      "tooltip": "문인선 sent an email to suntest225@gmail.com about \"a3\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a3",
+      "source": "문인선",
+      "target": "a3",
+      "from": "문인선",
+      "to": "a3",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a3\".",
+      "label": "문인선 is associated with the email subject \"a3\".",
+      "title": "문인선 is associated with the email subject \"a3\".",
+      "tooltip": "문인선 is associated with the email subject \"a3\"."
+    },
+    {
+      "id": "suntest225@gmail.com__RELATES_TO__a3",
+      "source": "suntest225@gmail.com",
+      "target": "a3",
+      "from": "suntest225@gmail.com",
+      "to": "a3",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "suntest225@gmail.com is associated with the email subject \"a3\".",
+      "label": "suntest225@gmail.com is associated with the email subject \"a3\".",
+      "title": "suntest225@gmail.com is associated with the email subject \"a3\".",
+      "tooltip": "suntest225@gmail.com is associated with the email subject \"a3\"."
+    },
+    {
+      "id": "문인선__SENDS_TO__suntest225@gmail.com",
+      "source": "문인선",
+      "target": "suntest225@gmail.com",
+      "from": "문인선",
+      "to": "suntest225@gmail.com",
+      "relationship": "SENDS_TO",
+      "type": "SENDS_TO",
+      "description": "문인선 sent an email to suntest225@gmail.com about \"a2\".",
+      "label": "문인선 sent an email to suntest225@gmail.com about \"a2\".",
+      "title": "문인선 sent an email to suntest225@gmail.com about \"a2\".",
+      "tooltip": "문인선 sent an email to suntest225@gmail.com about \"a2\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a2",
+      "source": "문인선",
+      "target": "a2",
+      "from": "문인선",
+      "to": "a2",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a2\".",
+      "label": "문인선 is associated with the email subject \"a2\".",
+      "title": "문인선 is associated with the email subject \"a2\".",
+      "tooltip": "문인선 is associated with the email subject \"a2\"."
+    },
+    {
+      "id": "suntest225@gmail.com__RELATES_TO__a2",
+      "source": "suntest225@gmail.com",
+      "target": "a2",
+      "from": "suntest225@gmail.com",
+      "to": "a2",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "suntest225@gmail.com is associated with the email subject \"a2\".",
+      "label": "suntest225@gmail.com is associated with the email subject \"a2\".",
+      "title": "suntest225@gmail.com is associated with the email subject \"a2\".",
+      "tooltip": "suntest225@gmail.com is associated with the email subject \"a2\"."
+    },
+    {
+      "id": "문인선__RELATES_TO__a1",
+      "source": "문인선",
+      "target": "a1",
+      "from": "문인선",
+      "to": "a1",
+      "relationship": "RELATES_TO",
+      "type": "RELATES_TO",
+      "description": "문인선 is associated with the email subject \"a1\".",
+      "label": "문인선 is associated with the email subject \"a1\".",
+      "title": "문인선 is associated with the email subject \"a1\".",
+      "tooltip": "문인선 is associated with the email subject \"a1\"."
+    }
+  ]
 }
