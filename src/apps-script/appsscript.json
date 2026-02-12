@@ -10,10 +10,11 @@
     "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/calendar"
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/gmail.modify"
   ],
   "urlFetchWhitelist": [
-    "https://unmatching-sandy-hydrocinnamyl.ngrok-free.dev/" 
+    "https://interatrial-tana-wishfully.ngrok-free.dev/" 
   ],
   "addOns": {
     "common": {
