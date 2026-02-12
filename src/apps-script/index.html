@@ -36,6 +36,11 @@
     <h2>Web App 페이지</h2>
     <p>이 페이지는 Apps Script 프로젝트의 <b>index.html</b> 입니다.</p>
 
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input id="label" value="Recent-Labeled" />
+      <input id="count" type="number" value="5" min="1" max="50" />
+      <button onclick="applyLabel()">최근 메일에 라벨 붙이기</button>
+    </div>
     <!-- (기존) GmailApp 테스트 -->
     <button onclick="loadSubjects()">📩 Inbox 제목 5개 가져오기 (GmailApp)</button>
 
@@ -57,8 +62,8 @@
         document.getElementById("out").textContent = "불러오는 중...";
 
         // 웹페이지에서 Apps Script 서버 함수 호출 (GmailApp 실행은 서버에서만 가능)
-        google.script.run
-          .withSuccessHandler(function(subjects) {
+        google.script.run // 브라우저 -> 구글서버 통신 객체
+          .withSuccessHandler(function(subjects) { // 서버 함수가 성공하면 subjects로 리턴한 결과가 옴
             document.getElementById("out").textContent =
               JSON.stringify(subjects, null, 2);
           })
@@ -66,7 +71,26 @@
             document.getElementById("out").textContent =
               "ERROR: " + (err && err.message ? err.message : String(err));
           })
-          .getInboxTopSubjects(5);
+          .getInboxTopSubjects(5); // gmailApp 사용하는 함수 ( 구글 서버에서 실행 )
+      }
+
+      // 라벨링
+      function applyLabel() {
+        const labelName = document.getElementById("label").value;
+        const n = Number(document.getElementById("count").value || 5);
+
+        document.getElementById("out").textContent = "라벨링 중...";
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            document.getElementById("out").textContent =
+              "완료!\n" + JSON.stringify(res, null, 2);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById("out").textContent =
+              "ERROR: " + (err && err.message ? err.message : String(err));
+          })
+          .labelRecentInboxThreads(labelName, n);
       }
 
       // =========================

@@ -13,6 +13,27 @@ function getInboxTopSubjects(limit) {
   return threads.map(t => t.getFirstMessageSubject());
 }
 
+// 브라우저에서 메일 라벨링 요청 처리함수
+function labelRecentInboxThreads(labelName, n) {
+  const limit = Math.max(1, Math.min(Number(n || 5), 50));
+  const name = String(labelName || "").trim();
+  if (!name) throw new Error("labelName이 비어있습니다.");
+
+  // 라벨 가져오거나 없으면 생성
+  let label = GmailApp.getUserLabelByName(name);
+  if (!label) label = GmailApp.createLabel(name);
+
+  // 최근 받은편지함 스레드 가져와 라벨 적용
+  const threads = GmailApp.getInboxThreads(0, limit);
+  threads.forEach(t => t.addLabel(label));
+
+  return {
+    ok: true,
+    labeledCount: threads.length,
+    labelName: label.getName(),
+  };
+}
+
 
 function getGraphData() {
   const files = DriveApp.getFilesByName("graphml_data.json");
