@@ -4,10 +4,37 @@ const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz6IrE751nxencGl5KXb
 
 
 function onHomepage(e) {
+  // ===== 질의용 =====
+  var inputSection = CardService.newCardSection().setHeader("💬 서버 질의");
+  var input = CardService.newTextInput()
+    .setFieldName("message")
+    .setTitle("서버로 보낼 메시지")
+    .setHint("메시지를 입력하세요")
+    .setMultiline(true);
+
+  var sendMessageToServerAction = CardService.newAction().setFunctionName("sendMessageToServer");
+  var extractGmailAction = CardService.newAction().setFunctionName("exportAllInboxAndSentIntoOneTxt");
+  
+  var querySendButton = CardService.newTextButton()
+    .setText("서버로 질의전송")
+    .setOnClickAction(sendMessageToServerAction);
+
+  inputSection.addWidget(input);
+  inputSection.addWidget(querySendButton);
 
   // =========================
-  // ✅ 라벨링 섹션 추가
+
+  // ===== gmail 데이터 플라스크 서버로 전송 =====
+  var extractGmailButton = CardService.newTextButton()
+    .setText("서버로 Gmail 내역 전송")
+    .setOnClickAction(extractGmailAction);  
+  
+  
+  inputSection.addWidget(extractGmailButton);
+
   // =========================
+
+  // 메일 라벨링 섹션 추가
   const labelSection = CardService.newCardSection().setHeader("🏷 최근 메일 라벨링");
 
   const labelInput = CardService.newTextInput()
@@ -34,9 +61,12 @@ function onHomepage(e) {
         .setOpenAs(CardService.OpenAs.FULL_SIZE) // 새 창(풀페이지)로
     ); 
 
+
   labelSection.addWidget(labelInput);
   labelSection.addWidget(nInput);
   labelSection.addWidget(btn);
+
+  // =========================
 
   const openWebSection = CardService.newCardSection()
     .setHeader("테스트")
@@ -44,60 +74,58 @@ function onHomepage(e) {
     .addWidget(openWebBtn);
 
   return CardService.newCardBuilder()
+    .addSection(inputSection)
     .addSection(openWebSection)
     .addSection(labelSection)
     .build();
 }
 
-/**
- * 최근 N개의 Inbox thread에 사용자가 고른 라벨을 적용 (라벨 없으면 생성)
- */
-function applyLabelToRecentInboxThreads_(labelName, n) {
-  labelName = (labelName || "").trim();
-  n = Number(n || 5);
+function sendMessageToServer(e) {
+  var text = (e && e.formInput && e.formInput.message) ? e.formInput.message : "";
 
-  if (!labelName) {
-    return { ok: false, msg: "라벨 이름을 입력하세요." };
+ var response = UrlFetchApp.fetch(TunnelURL + "/run-query", {
+    method: "post",
+    contentType: "application/json",
+    payload: JSON.stringify({
+      message: text,
+      resMethod: "local",
+      resType: "text"
+    })
+  });
+ var raw = response.getContentText();
+  Logger.log("Raw response: " + raw);
+
+  var resultText = raw;
+  try {
+    var data = JSON.parse(raw);
+    resultText = data.result || raw;
+  } catch (err) {
+    resultText = raw;
   }
-  if (!Number.isFinite(n) || n <= 0) {
-    return { ok: false, msg: "개수는 1개 이상이어야 해요." };
-  }
 
-  let label = GmailApp.getUserLabelByName(labelName);
-  if (!label) label = GmailApp.createLabel(labelName);
-
-  const threads = GmailApp.getInboxThreads(0, n);
-  threads.forEach((t) => t.addLabel(label));
-
-  return {
-    ok: true,
-    msg: `✅ 최근 Inbox 스레드 ${threads.length}개에 "${labelName}" 라벨 적용 완료`,
-  };
-}
-
-/**
- * 버튼 클릭 핸들러: 입력값 읽어서 라벨링 실행 후 토스트로 결과 표시
- */
-function onClickApplyLabelRecent_(e) {
-  const inputs =
-    (e && e.commonEventObject && e.commonEventObject.formInputs) || {};
-
-  const labelName =
-    inputs.labelName && inputs.labelName.stringInputs
-      ? inputs.labelName.stringInputs.value[0]
-      : "";
-
-  const n =
-    inputs.n && inputs.n.stringInputs
-      ? inputs.n.stringInputs.value[0]
-      : "5";
-
-  const res = applyLabelToRecentInboxThreads_(labelName, n);
+  // 응답을 카드로 보여주기
+  var card = CardService.newCardBuilder()
+    .addSection(
+      CardService.newCardSection()
+        .setHeader("✅ 서버 응답")
+        .addWidget(CardService.newTextParagraph().setText(resultText))
+    )
+    .build();
 
   return CardService.newActionResponseBuilder()
-    .setNotification(CardService.newNotification().setText(res.msg))
+    .setNavigation(CardService.newNavigation().pushCard(card))
     .build();
+    }
+
+function truncate(message) {
+  if (message.length > MAX_MESSAGE_LENGTH) {
+    message = message.slice(0, MAX_MESSAGE_LENGTH);
+    message = message.slice(0, message.lastIndexOf(" ")) + "...";
+  }
+  return message;
 }
+
+
 
 
 

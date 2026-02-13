@@ -4,14 +4,11 @@ import subprocess
 import time
 import sys
 from flask import Flask, request, jsonify
-import requests
 # jsonify는 파이썬 객체(dict, list 등)를
 #HTTP 응답으로 쓸 수 있는 “JSON 형식 + 헤더”로 자동 변환해주는 Flask 도구
 from flask_cors import CORS
 # from gmail import getFirstMail  
-# 
 
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzqtWOG4Vz25W36sfYYahsbDOf2UGSwODZYDXQbGDMurN5NuXbKfyWbyItgi3LX7wHBFg/exec"
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if hasattr(sys.stderr, "reconfigure"):
@@ -19,20 +16,7 @@ if hasattr(sys.stderr, "reconfigure"):
 app = Flask(__name__);
 CORS(app)
 
-@app.route('/mails', methods=['GET'])
-def get_mail(): 
-    print("HIT /mails")
-    request_data = request.args
-    title = request_data.get('title', 'No Title Provided')
-    print(title)
-    return jsonify({
-        "ok": True,
-        "message": "Server received your title!",
-        "echoedSubject": title,
-        })
-
-recordText=""
-
+# ===== graphrag 쿼리 실행 =====
 @app.route('/run-query', methods=['POST'])
 def run_query():
     message = request.json.get('message', '')
@@ -61,9 +45,6 @@ def run_query():
         '--query',
         message
     ]
-
-    @app.post("/relay")
-
 
     def decode_output(b: bytes) -> str:
         """stdout/stderr 바이트를 안전하게 문자열로 변환"""
@@ -117,6 +98,8 @@ def run_query():
     #text_to_speech(answer)
     return jsonify({'result': answer})
 
+
+# ===== gmail 데이터 플라스크 서버로 전송 =====
 @app.route("/upload", methods=["POST"])
 def upload():
     data = request.json
@@ -124,24 +107,6 @@ def upload():
         f.write(data["content"])
     return {"ok": True}
 
-def relay():
-    data = request.json
-
-    # 🔎 여기서 검증/로깅 가능
-    print("FROM BROWSER:", data)
-
-    # 👉 Apps Script Web App으로 전달
-    res = requests.post(
-        WEBAPP_URL,
-        json={
-            "token": data.get("token"),
-        },
-        timeout=10,
-    )
-
-    return jsonify({
-        "fromAppsScript": res.json()
-    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=80, debug=True)
