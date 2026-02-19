@@ -3,7 +3,8 @@ import re
 import subprocess
 import time
 import sys
-from flask import Flask, request, jsonify
+import json
+from flask import Flask, request, jsonify, send_from_directory
 # jsonify는 파이썬 객체(dict, list 등)를
 #HTTP 응답으로 쓸 수 있는 “JSON 형식 + 헤더”로 자동 변환해주는 Flask 도구
 from flask_cors import CORS
@@ -18,12 +19,11 @@ if hasattr(sys.stderr, "reconfigure"):
 app = Flask(__name__);
 CORS(app)
 
-MAIL_DIR = "./parquet/input"
+MAIL_DIR = "src/parquet/input"
 MAIL_LATEST_PATH = os.path.join(MAIL_DIR, "mail_latest.txt")
 
-GRAPH_JSON_PATH = "./json/graphml_data.json"   # 최종으로 쓰고 싶은 그래프 JSON 경로
-GRAPH_BUILD_SCRIPT = "graphml2json.py"           # 그래프 JSON 만드는 스크립트 파일명(너 프로젝트에 있는 걸로)
-
+GRAPH_JSON_PATH = "src/json/graphml_data.json"   # 최종으로 쓰고 싶은 그래프 JSON 경로
+GRAPH_BUILD_SCRIPT = "src/graphml2json.py"           # 그래프 JSON 만드는 스크립트 파일명(너 프로젝트에 있는 걸로)
 
 # ===== graphrag 쿼리 실행 =====
 @app.route('/run-query', methods=['POST'])
