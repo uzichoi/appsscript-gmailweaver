@@ -34,10 +34,8 @@ function labelRecentInboxThreads(labelName, n) {
   };
 }
 
-const TUNNEL_URL = "https://unmatching-sandy-hydrocinnamyl.ngrok-free.dev";
-
 function getGraphData() {
-  const url = TUNNEL_URL + "/graph-data";
+  const url = TunnelURL + "/graph-data";
 
   const res = UrlFetchApp.fetch(url, {
     method: "get",
