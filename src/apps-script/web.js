@@ -1,87 +1,138 @@
-// Gmail Add-on(클라이언트)이 사용자의 전체 Gmail 스냅샷을 만들어 서버(GraphRAG 파이프라인 쪽)에 업로드하는 함수
-function exportAllInboxAndSentIntoOneTxt() {
-  // 받은 메일 + 보낸 메일
-  const query = "in:inbox OR in:sent";  // Gmail 검색 쿼리(검색어) 지정: 수신함 or 송신함
-  const threads = GmailApp.search(query, 0, 500);   // 조건에 맞는 스레드 최대 500개 가져와서 threads 배열에 저장. 이때 단위는 스레드이므로, 각 thread 안에는 여러 message들이 존재
-
-  const folder = DriveApp.getRootFolder();  // Drive에 파일 저장 시 사용. 그러나 현재 createDrive는 주석 처리되어 있으므로, 오직 서버 전송에만 사용됨
-  const myEmail = Session.getActiveUser().getEmail();   // 해당 스크립트를 이용하는 사용자의 Gmail 주소. 
-
-  let allText = "";   // 모든 메일을 하나의 문자열로 저장(누적)
-  let mailCount = 0;  // 추출된 메일 총 개수 카운터
-
-  threads.forEach((thread) => {   // 각 스레드에 대해
-    thread.getMessages().forEach((msg) => {   //  그 스레드 안의 각 메시지(GmailMessage 객체)에 대해
-      mailCount++;  // 메일 카운트 증가
-
-      const id = msg.getId();   // 메시지 ID
-      const subject = msg.getSubject() || "(제목 없음)";  // 메시지 제목
-      const from = msg.getFrom() || "";   // 송신인
-      const to = msg.getTo() || "";   // 수신인
-      const cc = msg.getCc() || "";   // 참조
-      const date = msg.getDate();     // 날짜
-
-      // 수신 / 발신 구분
-      const direction = from.includes(myEmail) ? "발신" : "수신";   // 송신인 중에서 사용자 추출
-
-      // 첨부파일 정보
-      const atts = msg.getAttachments({ includeInlineImages: false });  // 첨부파일 추출. 본문에 인라인 이미지로 삽입된 경우 제외
-      let attachmentInfo = "";  
-      if (atts.length === 0) {  // 첨부파일이 존재하지 않는 경우
-        attachmentInfo = "첨부파일: 없음\n";
-      } else {  // 첨부파일이 존재하는 경우
-        attachmentInfo = "첨부파일:\n"; 
-        atts.forEach((att, i) => {
-          attachmentInfo += `  ${i + 1}. ${att.getName()} | ${att.getContentType()} | ${att.getSize()} bytes\n`;  // 파일명, MIME 타입, 크기(bytes) 추출하여 문자열 저장 
-        });
-      }
-
-      // 메일 본문 (텍스트)
-      const body = msg.getPlainBody() || "";  // 플레인 텍스트. not HTML
-
-      // TXT에 추가. 하나의 메일을 하나의 텍스트 파일로 만들기
-      allText += 
-      `============================================================
-      [메일 ${mailCount}]
-      ID: ${id}
-      구분: ${direction}
-      제목: ${subject}
-      보낸 사람: ${from}
-      받는 사람: ${to}
-      참조(CC): ${cc}
-      날짜: ${date}
-
-      [첨부파일 정보]
-      ${attachmentInfo}
-
-      [본문]
-      ${body}
-      ============================================================
-      `;
-    });
-  });
-
-  if (mailCount === 0) {  // 메일이 하나도 없는 경우
-    allText = "메일이 없습니다.\n";
-  }
-
-  const filename = `gmail_ALL_inbox_sent_${dateToYmdHms_(new Date())}.txt`;   // 파일 이름 생성
-  //folder.createFile(filename, allText, MimeType.PLAIN_TEXT);  // 구글 드라이브에 파일 저장
-  UrlFetchApp.fetch(TunnelURL +"/upload", {   // 해당 서버 주소로 HTTP POST. POST 방식을 사용하는 이유는 '서버 상태를 변경(파일 생성/저장)하기 때문
-    method: "post",
-    contentType: "application/json",
-    payload: JSON.stringify({
-      filename,
-      content: allText,
-    }),
-  });
-  Logger.log(
-    `총 ${mailCount}개의 메일을 추출하여 파일로 저장했습니다: ${filename}`
-  );
+function doGet(e) {
+  return HtmlService.createTemplateFromFile("index")
+    .evaluate()
+    .setTitle("Web UI");
 }
 
-// 파일명용 날짜 문자열
-function dateToYmdHms_(d) {   // 매개변수는 Date 객체
-  const pad = (n) => String(n).padStart(2, "0");  // 숫자를 문자열로 변환하고, 문자열 길이가 2가 되도록 앞쪽에 0을 채워서 반환. pad(padding): 데이터의 길이를 맞추기 위해 앞이나 뒤에 값을 채워 넣는 것
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;    // eg. 2026년 2월 3일 오후 4시 5분 9초 -> 2026-02-03_160509와 같은 형태로 반환. padStart()는 String 객체의 메서드
+//web.js에 d3chart.js 삽입하기 위해서
+function include(filename) {
+  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+}
+
+/**
+ * (선택) Web App 페이지에서 GmailApp 호출 테스트용
+ * index.html에서 google.script.run으로 호출함
+ */
+function getInboxTopSubjects(limit) {
+  const n = Math.max(1, Math.min(Number(limit || 5), 20));
+  const threads = GmailApp.getInboxThreads(0, n);
+  return threads.map(t => t.getFirstMessageSubject());
+}
+
+// 브라우저에서 메일 라벨링 요청 처리함수
+function labelRecentInboxThreads(labelName, n) {
+  const limit = Math.max(1, Math.min(Number(n || 5), 50));
+  const name = String(labelName || "").trim();
+  if (!name) throw new Error("labelName이 비어있습니다.");
+
+  // 라벨 가져오거나 없으면 생성
+  let label = GmailApp.getUserLabelByName(name);
+  if (!label) label = GmailApp.createLabel(name);
+
+  // 최근 받은편지함 스레드 가져와 라벨 적용
+  const threads = GmailApp.getInboxThreads(0, limit);
+  threads.forEach(t => t.addLabel(label));
+
+  return {
+    ok: true,
+    labeledCount: threads.length,
+    labelName: label.getName(),
+  };
+}
+
+
+// ─────────────────────────────────────────
+// Flask 서버에서 그래프 데이터 가져오기
+// TunnelURL은 common.js에 정의 (ngrok 주소)
+// ─────────────────────────────────────────
+
+function getGraphData() {
+  const url = TunnelURL + "/graph-data";
+
+  const res = UrlFetchApp.fetch(url, {
+    method: "get",
+    headers: {
+      "ngrok-skip-browser-warning": "1",
+      "User-Agent": "AppsScript/1.0"
+    },
+    followRedirects: true,
+    muteHttpExceptions: true,
+  });
+
+  const code = res.getResponseCode();
+  const text = res.getContentText();
+
+  if (code !== 200) {
+    throw new Error("graph-data fetch failed: " + code + " / " + text.slice(0, 200));
+  }
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error("graph-data JSON parse failed. head=" + text.slice(0, 200));
+  }
+
+  // 기대 형태: { nodes: [...], edges: [...] }
+  if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+    throw new Error("graph-data 형식이 올바르지 않습니다. {nodes, edges} 필요. body_head=" + text.slice(0, 200));
+  }
+
+  return data;
+}
+
+// ─────────────────────────────────────────
+// 메일 목록 가져오기 (D3 줌동그라미용)
+// exportAllInboxAndSentIntoOneTxt()의 필드 구조 참고해서
+// 수신/발신 구분, 첨부파일 여부까지 포함
+// ─────────────────────────────────────────
+function getInboxMessages(limit) {
+  const n = Math.max(1, Math.min(Number(limit || 20), 50));
+  // 현재 로그인 계정 이메일 (수신/발신 구분에 사용)
+  const myEmail = Session.getActiveUser().getEmail();
+  // getInboxThreads() 대신 search()로 더 정밀한 조건 지정 가능
+  const threads = GmailApp.search("in:inbox", 0, n);
+
+  const result = [];
+  threads.forEach(function(thread) {
+    const msg = thread.getMessages()[0]; // 스레드 대표 메시지
+    const from = msg.getFrom() || "";
+    // 발신자에 내 이메일이 포함되면 "발신", 아니면 "수신"
+    const direction = from.includes(myEmail) ? "발신" : "수신";
+    // 첨부파일 여부 (인라인 이미지 제외)
+    const atts = msg.getAttachments({ includeInlineImages: false });
+
+    result.push({
+      id: msg.getId(),                                  // Gmail 고유 ID → 삭제 시 사용
+      subject: msg.getSubject() || "(제목 없음)",
+      from: from,
+      to: msg.getTo() || "",
+      date: msg.getDate().toLocaleDateString("ko-KR"), // "2026. 2. 25." 형식
+      direction: direction,                             // "수신" or "발신"
+      hasAttachment: atts.length > 0                   // 동그라미 색상 구분용
+    });
+  });
+  return result;
+}
+
+
+// ─────────────────────────────────────────
+// 메일 휴지통으로 이동 (복구 가능, 30일 보관)
+// gmail.modify scope로 동작 (appsscript.json에 이미 있음)
+// ─────────────────────────────────────────
+function trashMessage(messageId) {
+  const msg = GmailApp.getMessageById(messageId);
+  msg.moveToTrash(); // 휴지통 이동 (복구 가능)
+  return { ok: true, id: messageId };
+}
+
+
+// ─────────────────────────────────────────
+// 메일 완전 삭제 (복구 불가)
+// Gmail Advanced Service 필요
+// Apps Script 에디터 → 서비스(+) → Gmail API 추가 후 사용 가능
+// ─────────────────────────────────────────
+function deleteMessage(messageId) {
+  Gmail.Users.Messages.remove("me", messageId); // 영구 삭제
+  return { ok: true, id: messageId };
 }

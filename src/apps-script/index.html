@@ -1,8 +1,10 @@
+<!-- src/apps-script/index.html -->
+
 <!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>Web UI</title>
+  <title>GmailWeaver Web App</title>
 
   <!-- D3.js v7 CDN (한 번만 로드) -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -30,8 +32,6 @@
         margin-top: 12px;
         overflow: hidden;
     }
-
-    /* 새로 추가된 CSS 줌동그라미 전용 */
     #toolbar {
       display: flex; gap: 10px; margin-bottom: 14px;
       align-items: center; flex-wrap: wrap;
@@ -68,8 +68,8 @@
 
 <body>
 
-  <!-- 줌동그라미 섹션 -->
-  <h2>📩 받은편지함 줌동그라미</h2>
+  <!-- 줌동그라미 섹션: 메일 버블 시각화 -->
+  <h2>📩 받은 편지함 줌동그라미</h2>
 
   <div id="toolbar">
     <button id="loadBtn"   onclick="loadMails()">📬 메일 불러오기</button>
@@ -80,13 +80,14 @@
   </div>
 
   <div id="selected-info"></div>
-
-  <!-- 줌동그라미 SVG: id를 zoomChart로 변경해서 기존 chart와 충돌 방지 -->
+  
+  <!-- 1) 줌동그라미 시각화 영역 (d3chart.html에서 제어) -->
   <div id="zoomChartWrap">
     <svg id="zoomChart"></svg>
   </div>
 
-  <!-- d3chart.html의 <script> 삽입 -->
+  <!-- 2) GraphRAG 네트워크 그래프 영역 (loadGraph -> renderNetworkChart에서 제어) -->
+  <!-- Apps Script HTML 템플릿 include: d3chart.html 파일의 내용을 현재 위치에 삽입 -->
   <?!= include('d3chart'); ?>
 
   <hr style="margin: 24px 0;" />
@@ -105,21 +106,22 @@
     <!-- 그래프 로드 버튼 -->
     <button onclick="loadGraph()" style="margin-left:8px;">🕸️ 그래프 불러오기</button>
 
-    <pre id="out">여기에 결과가 표시됩니다.</pre>
+    <!-- 서버 호출 결과와 상태 메시지 출력 -->
+    <pre id="out">이곳에 결과가 표시됩니다.</pre>
 
-    <!-- 그래프 영역 -->
+    <!-- GraphRAG 네트워크 그래프 영역 -->
     <div id="chartWrap">
       <svg id="chart" width="100%" height="100%"></svg>
     </div>
 
     <script>
-      // (기존) GmailApp 테스트
+      // GmailApp 테스트
       function loadSubjects() {
         document.getElementById("out").textContent = "불러오는 중...";
 
-        // 웹페이지에서 Apps Script 서버 함수 호출 (GmailApp 실행은 서버에서만 가능)
-        google.script.run // 브라우저 -> 구글서버 통신 객체
-          .withSuccessHandler(function(subjects) { // 서버 함수가 성공하면 subjects로 리턴한 결과가 옴
+        // 웹페이지(클라이언트 HTML)에서 Apps Script 서버 함수 호출하는 인터페이스 (GmailApp 실행은 서버에서만 가능)
+        google.script.run // 브라우저 → 구글서버 통신 객체
+          .withSuccessHandler(function(subjects) { // 서버 함수가 성공하면 subjects로 리턴한 결과가 전송
             document.getElementById("out").textContent =
               JSON.stringify(subjects, null, 2);
           })
@@ -127,7 +129,7 @@
             document.getElementById("out").textContent =
               "ERROR: " + (err && err.message ? err.message : String(err));
           })
-          .getInboxTopSubjects(5); // gmailApp 사용하는 함수 ( 구글 서버에서 실행 )
+          .getInboxTopSubjects(5); // gmailApp 사용하는 함수 (구글 서버에서 실행)
       }
 
       // 라벨링
@@ -150,7 +152,7 @@
       }
 
       // 그래프 로드
-  
+      // 서버 측 Apps Script 함수에서 그래프 데이터를 받아와 네트워크 차트로 렌더링
       function loadGraph() {
         document.getElementById("out").textContent = "그래프 불러오는 중...";
 
@@ -167,7 +169,7 @@
           .getGraphData();
       }
 
-      // D3 렌더 (React 없이)
+      // GraphRAG에서 추출된 노드/엣지 데이터를 네트워크 그래프로 렌더링
       function renderNetworkChart(data) {
         if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
           console.error("Invalid data format", data);
@@ -181,10 +183,11 @@
         const width = wrap.clientWidth;
         const height = wrap.clientHeight;
 
+        // 시각화 복잡도를 줄이기 위해 일부 엔티티 타입은 렌더링에서 제외
         const HIDDEN_TYPES = new Set(["EMAIL", "DATE", "EMAIL_ADDRESS", "FILE_TYPE"]);
         const getNodeType = (n) => String(n.entity_type || n.type || "").toUpperCase();
 
-        // D3가 edge.source/target을 객체로 바꿔도 안전하게 id 뽑기
+        // D3가 edge.source/target을 객체로 바뀌어도 안전하게 ID 추출
         const edgeEndpointId = (x) => {
           if (x == null) return "";
           if (typeof x === "string" || typeof x === "number") return String(x);
