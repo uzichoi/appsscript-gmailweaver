@@ -40,7 +40,7 @@ function _requestCalendarAsync(message, messageId) {    // message: 질의 내�
 }
 
 // 결과 확인 버튼 이벤트 핸들러
-function _onCheckJobResult(e) {
+function onCheckJobResult(e) {
   var params    = (e && e.commonEventObject && e.commonEventObject.parameters) || {};   // 파라미터 추출
   var jobId     = params.jobId     || "";   // 작업 번호
   var query     = params.query     || "";   // 검색어(질의 내용)
