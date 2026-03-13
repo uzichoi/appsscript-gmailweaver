@@ -1,0 +1,352 @@
+<!-- src/apps-script/index.html -->
+
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>GmailWeaver Web App</title>
+
+  <!-- D3.js v7 CDN (한 번만 로드) -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    button { padding: 8px 12px; cursor: pointer; }
+    pre { background: #f5f5f5; padding: 12px; border-radius: 8px; }
+    .tooltip {
+      position: absolute;
+      visibility: hidden;
+      white-space: pre-line;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      pointer-events: none;
+    }
+    #chartWrap {
+        width: 100%;
+        height: 70vh;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-top: 12px;
+        overflow: hidden;
+    }
+    #toolbar {
+      display: flex; gap: 10px; margin-bottom: 14px;
+      align-items: center; flex-wrap: wrap;
+    }
+    #loadBtn   { background: #4285f4; color: white; border: none; border-radius: 6px; font-weight: bold; }
+    #trashBtn  { background: #ff9800; color: white; border: none; border-radius: 6px; font-weight: bold; display: none; }
+    #deleteBtn { background: #ea4335; color: white; border: none; border-radius: 6px; font-weight: bold; display: none; }
+    #cancelBtn { background: #9e9e9e; color: white; border: none; border-radius: 6px; font-weight: bold; display: none; }
+    #status { font-size: 13px; color: #555; }
+    #selected-info {
+      background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;
+      padding: 8px 14px; font-size: 13px; color: #333;
+      display: none; margin-bottom: 10px; max-width: 100%;
+    }
+
+    /* 줌동그라미 SVG 영역 */
+    #zoomChartWrap {
+      width: 100%;
+      height: 70vh;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+    #zoomChart { display: block; width: 100%; height: 100%; }
+    .node circle { stroke: #fff; stroke-width: 2px; transition: stroke 0.2s; }
+    .node circle.selected { stroke: #ea4335; stroke-width: 4px; }
+    .node text {
+      pointer-events: none; text-anchor: middle;
+      dominant-baseline: middle; font-size: 11px; fill: #fff;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 줌동그라미 섹션: 메일 버블 시각화 -->
+  <h2>📩 받은 편지함 줌동그라미</h2>
+
+  <div id="toolbar">
+    <button id="loadBtn"   onclick="loadMails()">📬 메일 불러오기</button>
+    <button id="trashBtn"  onclick="confirmTrash()">🗑️ 휴지통으로 이동</button>
+    <button id="deleteBtn" onclick="confirmDelete()">💀 완전 삭제</button>
+    <button id="cancelBtn" onclick="cancelSelect()">✕ 선택 취소</button>
+    <span id="status">메일 불러오기 버튼을 눌러주세요.</span>
+  </div>
+
+  <div id="selected-info"></div>
+  
+  <!-- 1) 줌동그라미 시각화 영역 (d3chart.html에서 제어) -->
+  <div id="zoomChartWrap">
+    <svg id="zoomChart"></svg>
+  </div>
+
+  <!-- 2) GraphRAG 네트워크 그래프 영역 (loadGraph -> renderNetworkChart에서 제어) -->
+  <!-- Apps Script HTML 템플릿 include: d3chart.html 파일의 내용을 현재 위치에 삽입 -->
+  <?!= include('d3chart'); ?>
+
+  <hr style="margin: 24px 0;" />
+
+  <h2>Web App 페이지</h2>
+    <p>이 페이지는 Apps Script 프로젝트의 <b>index.html</b> 입니다.</p>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input id="label" value="Recent-Labeled" />
+      <input id="count" type="number" value="5" min="1" max="50" />
+      <button onclick="applyLabel()">최근 메일에 라벨 붙이기</button>
+    </div>
+    <!--  GmailApp 테스트 -->
+    <button onclick="loadSubjects()">📩 Inbox 제목 5개 가져오기</button>
+
+    <!-- 그래프 로드 버튼 -->
+    <button onclick="loadGraph()" style="margin-left:8px;">🕸️ 그래프 불러오기</button>
+
+    <!-- 서버 호출 결과와 상태 메시지 출력 -->
+    <pre id="out">이곳에 결과가 표시됩니다.</pre>
+
+    <!-- GraphRAG 네트워크 그래프 영역 -->
+    <div id="chartWrap">
+      <svg id="chart" width="100%" height="100%"></svg>
+    </div>
+
+    <script>
+      // GmailApp 테스트
+      function loadSubjects() {
+        document.getElementById("out").textContent = "불러오는 중...";
+
+        // 웹페이지(클라이언트 HTML)에서 Apps Script 서버 함수 호출하는 인터페이스 (GmailApp 실행은 서버에서만 가능)
+        google.script.run // 브라우저 → 구글서버 통신 객체
+          .withSuccessHandler(function(subjects) { // 서버 함수가 성공하면 subjects로 리턴한 결과가 전송
+            document.getElementById("out").textContent =
+              JSON.stringify(subjects, null, 2);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById("out").textContent =
+              "ERROR: " + (err && err.message ? err.message : String(err));
+          })
+          .getInboxTopSubjects(5); // gmailApp 사용하는 함수 (구글 서버에서 실행)
+      }
+
+      // 라벨링
+      function applyLabel() {
+        const labelName = document.getElementById("label").value;
+        const n = Number(document.getElementById("count").value || 5);
+
+        document.getElementById("out").textContent = "라벨링 중...";
+
+        google.script.run
+          .withSuccessHandler(function(res) {
+            document.getElementById("out").textContent =
+              "완료!\n" + JSON.stringify(res, null, 2);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById("out").textContent =
+              "ERROR: " + (err && err.message ? err.message : String(err));
+          })
+          .labelRecentInboxThreads(labelName, n);
+      }
+
+      // 그래프 로드
+      // 서버 측 Apps Script 함수에서 그래프 데이터를 받아와 네트워크 차트로 렌더링
+      function loadGraph() {
+        document.getElementById("out").textContent = "그래프 불러오는 중...";
+
+        google.script.run
+          .withSuccessHandler(function(data) {
+            document.getElementById("out").textContent =
+              `그래프 로드 완료: nodes=${data.nodes.length}, edges=${data.edges.length}`;
+            renderNetworkChart(data);
+          })
+          .withFailureHandler(function(err) {
+            document.getElementById("out").textContent =
+              "ERROR: " + (err && err.message ? err.message : String(err));
+          })
+          .getGraphData();
+      }
+
+      // GraphRAG에서 추출된 노드/엣지 데이터를 네트워크 그래프로 렌더링
+      function renderNetworkChart(data) {
+        if (!data || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+          console.error("Invalid data format", data);
+          return;
+        }
+
+        const svg = d3.select("#chart");
+        svg.selectAll("*").remove();
+
+        const wrap = document.getElementById("chartWrap");
+        const width = wrap.clientWidth;
+        const height = wrap.clientHeight;
+
+        // 시각화 복잡도를 줄이기 위해 일부 엔티티 타입은 렌더링에서 제외
+        const HIDDEN_TYPES = new Set(["EMAIL", "DATE", "EMAIL_ADDRESS", "FILE_TYPE"]);
+        const getNodeType = (n) => String(n.entity_type || n.type || "").toUpperCase();
+
+        // D3가 edge.source/target을 객체로 바뀌어도 안전하게 ID 추출
+        const edgeEndpointId = (x) => {
+          if (x == null) return "";
+          if (typeof x === "string" || typeof x === "number") return String(x);
+          if (typeof x === "object") return ("id" in x) ? String(x.id) : String(x);
+          return String(x);
+        };
+
+        // 1) Visible nodes/edges
+        const visibleNodesRaw = data.nodes.filter((n) => !HIDDEN_TYPES.has(getNodeType(n)));
+        const visibleIdSet = new Set(visibleNodesRaw.map((n) => String(n.id)));
+
+        const visibleEdgesRaw = data.edges.filter((e) => {
+          const s = String(e.source);
+          const t = String(e.target);
+          return visibleIdSet.has(s) && visibleIdSet.has(t);
+        });
+
+        const nodes = visibleNodesRaw.map((d) => ({
+          ...d,
+          degree: typeof d.degree === "number" ? d.degree : 5,
+        }));
+
+        const edges = visibleEdgesRaw.map((d) => ({
+          ...d,
+          value: 1,
+          description: typeof d.description === "string" ? d.description : "",
+        }));
+
+        // 2) Tooltip text
+        const formatNodeTooltip = (d) => {
+          const id = String(d.id ?? "");
+          const desc =
+            (typeof d.description === "string" && d.description.trim())
+              ? d.description
+              : "(no description)";
+          return `ID: ${id}\nDescription: ${desc}`;
+        };
+
+        const formatEdgeTooltip = (e) => {
+          if (typeof e.description === "string" && e.description.trim()) return e.description;
+          const rel = String(e.relationship || e.type || "").toUpperCase() || "RELATED";
+          const s = edgeEndpointId(e.source);
+          const t = edgeEndpointId(e.target);
+          return `${rel}: ${s} -> ${t}`;
+        };
+
+        // 3) D3 render
+        const color = d3.scaleOrdinal(["#f7ad63", "#6ade53", "#f15fb2", "#83d7f1", "#a133ff"]);
+
+        const maxDegree = d3.max(nodes, (d) => d.degree) || 1;
+        const sizeScale = d3.scaleLinear().domain([0, maxDegree]).range([15, 30]);
+
+        svg
+          .attr("width", "100%")
+          .attr("height", "100%")
+          .attr("viewBox", [0, 0, width, height])
+          .style("max-width", "100%")
+          .style("height", "100%");
+
+        const graphGroup = svg.append("g");
+
+        // tooltip
+        let tooltip = d3.select("body").select(".tooltip");
+        if (tooltip.empty()) tooltip = d3.select("body").append("div").attr("class", "tooltip");
+
+        const showTooltip = (event, text) => {
+          tooltip
+            .style("visibility", "visible")
+            .text(text)
+            .style("top", `${event.pageY + 10}px`)
+            .style("left", `${event.pageX + 10}px`);
+        };
+        const moveTooltip = (event) => {
+          tooltip.style("top", `${event.pageY + 10}px`).style("left", `${event.pageX + 10}px`);
+        };
+        const hideTooltip = () => tooltip.style("visibility", "hidden");
+
+        const simulation = d3
+          .forceSimulation(nodes)
+          .force("link", d3.forceLink(edges).id((d) => d.id).distance(150).strength(0.2))
+          .force("charge", d3.forceManyBody().strength(-50).distanceMin(20).distanceMax(500))
+          .force("center", d3.forceCenter(width / 2, height / 2))
+          .force("collision", d3.forceCollide().radius((d) => sizeScale(d.degree) + 10))
+          .force("x", d3.forceX(width / 2).strength(0.05))
+          .force("y", d3.forceY(height / 2).strength(0.05))
+          .alphaDecay(0.03)
+          .alphaTarget(0.02);
+
+        const edge = graphGroup
+          .append("g")
+          .attr("stroke", "#999")
+          .attr("stroke-opacity", 0.6)
+          .selectAll("line")
+          .data(edges)
+          .join("line")
+          .attr("stroke-width", (d) => Math.sqrt(d.value))
+          .on("mouseover", (event, d) => showTooltip(event, formatEdgeTooltip(d)))
+          .on("mousemove", (event) => moveTooltip(event))
+          .on("mouseout", () => hideTooltip());
+
+        const nodeGroup = graphGroup
+          .append("g")
+          .selectAll("g")
+          .data(nodes)
+          .join("g")
+          .on("mouseover", (event, d) => showTooltip(event, formatNodeTooltip(d)))
+          .on("mousemove", (event) => moveTooltip(event))
+          .on("mouseout", () => hideTooltip())
+          .call(
+            d3
+              .drag()
+              .on("start", (event) => {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                event.subject.fx = event.subject.x;
+                event.subject.fy = event.subject.y;
+              })
+              .on("drag", (event) => {
+                event.subject.fx = event.x;
+                event.subject.fy = event.y;
+              })
+              .on("end", (event) => {
+                if (!event.active) simulation.alphaTarget(0);
+                event.subject.fx = null;
+                event.subject.fy = null;
+              })
+          );
+
+        nodeGroup
+          .append("circle")
+          .attr("r", (d) => sizeScale(d.degree))
+          .attr("fill", (d) => color(getNodeType(d) || "DEFAULT"))
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 1.5);
+
+        nodeGroup
+          .append("text")
+          .attr("text-anchor", "middle")
+          .attr("dy", "0.35em")
+          .style("font-size", "10px")
+          .style("font-weight", "bold")
+          .style("fill", "#333")
+          .text((d) => d.id);
+
+        const zoom = d3
+          .zoom()
+          .scaleExtent([0.5, 10])
+          .on("zoom", (event) => graphGroup.attr("transform", event.transform));
+        svg.call(zoom);
+
+        simulation.on("tick", () => {
+          edge
+            .attr("x1", (d) => d.source.x)
+            .attr("y1", (d) => d.source.y)
+            .attr("x2", (d) => d.target.x)
+            .attr("y2", (d) => d.target.y);
+
+          nodeGroup.attr("transform", (d) => `translate(${d.x},${d.y})`);
+        });
+      }
+    </script>
+  </body>
+</html>
