@@ -2,9 +2,9 @@
 
 ## Overview
 
-**GmailWeaver**는 Gmail 이메일 데이터를 분석하여 **지식 그래프(Knowledge Graph)**를 구축하고, **GraphRAG 기반 자연어 검색**을 제공하는 시스템이다.
+**GmailWeaver**는 Gmail 이메일 데이터를 분석하여 **지식 그래프(Knowledge Graph)를 구축**하고, **GraphRAG 기반 자연어 검색**을 제공하는 시스템이다.
 
-사용자는 Gmail Add-on 인터페이스를 통해 자연어로 질의를 입력할 수 있으며, 서버는 이메일에서 추출된 **엔티티(Entity)**와 **관계(Relation)**를 기반으로 구축된 그래프를 탐색하여 관련 정보를 반환한다.
+사용자는 Gmail Add-on 인터페이스를 통해 자연어로 질의를 입력할 수 있으며, 서버는 이메일에서 추출된 **엔티티**(Entity)와 **관계**(Relation)를 기반으로 구축된 그래프를 탐색하여 관련 정보를 반환한다.
 
 본 시스템은 다음과 같은 구조로 구성된다.
 
@@ -31,17 +31,14 @@
 
 ```text
 Gmail Add-on (Apps Script)
-│
-│ HTTP Request
-▼
-GraphRAG Server (Flask)
-│
-│ Entity / Relation Extraction
-▼
-Knowledge Graph
-│
-▼
-Graph-based Retrieval
+    │
+    │ HTTP request / response
+    ▼
+Flask Server
+    ├─ mail2json / preprocessing
+    ├─ GraphRAG query / indexing
+    ├─ Knowledge Graph (graph.graphml)
+    └─ Vector DB / index storage
 ```
 
 ---
@@ -50,12 +47,13 @@ Graph-based Retrieval
 
 ## Python Environment
 
-GraphRAG와의 호환성을 위해 **Python 3.11 버전 사용을 권장**한다.
+**GraphRAG 2.1.0은 Python 3.11 환경에서 사용하는 것을 권장한다.**
+Python 3.12+ 또는 3.13 환경에서는 설치/실행 호환성 문제가 발생할 수 있다.
 
 ### Virtual Environment 생성
 
 ```bash
-python -m venv gmailweaver-venv
+py -3.11 -m venv gmailweaver-venv
 ```
 
 ### 가상환경 활성화
@@ -67,6 +65,11 @@ python -m venv gmailweaver-venv
 which python
 ```
 프로젝트 내 가상환경 경로가 출력되면 정상적으로 활성화된 것이다.
+
+### 가상환경 내 GraphRAG 설치
+```bash
+pip install graphrag==2.1.0
+```
 
 ---
 
@@ -105,11 +108,9 @@ clasp pull    # Apps Script → 로컬 반영
 
 다음 파일에서 자신의 환경에 맞게 주소를 수정한다.
 
-### `appsscript.json`
-- `urlFetchWhitelist`를 자신의 **ngrok 주소**로 변경
-
-### `common.js`
-- `WEBAPP_URL`을 자신의 **Web App URL**로 변경
+### common.json
+- 'TunnelURL'을 자신의 **Tunnerling URL**로 변경
+- 'WEBAPP_URL'을 자신의 **Web App URL**로 변경
 
 ---
 
@@ -120,7 +121,7 @@ clasp pull    # Apps Script → 로컬 반영
 ```bash
 ngrok http 80
 ```
-ngrok 실행 후 생성된 https 주소를 urlFetchWhitelist에 등록해야 한다.
+ngrok 실행 후 생성된 https 주소를 'urlFetchWhitelist'에 등록해야 한다.
 
 ---
 
