@@ -1,7 +1,7 @@
 // src/apps-script/common.js
 
-var TunnelURL = "https://transpalmar-christine-noneducatory.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxeAjOdKpQ0P3PArjz1vFpgzpL8tVmOefn1e4WAZuM/dev";   // Apps Script Web App으로 배포된 URL
+var TunnelURL = "https://unmatching-sandy-hydrocinnamyl.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwQ8hXa8QIpxyD-XUbZ3FThm-XD3Jx9WKNpA4Xozf2t/dev";   // Apps Script Web App으로 배포된 URL
 
 
 // 공식 엔트리 포인트 (외부에서 호출)
@@ -123,7 +123,7 @@ function _buildGmailMessageCard(e) {
         .setHeader("📅 일정 분석 · 등록");
 
     var calDesc = CardService.newTextParagraph()    // 단순 텍스트 표시 위젯 (버튼 X)
-        .setText("메일 본문에서 날짜/시간 정보를 감지하여 Google 캘린더에 일정을 등록합니다.");
+        .setText("메일 본문에서 날짜/시간 정보를 추출하여 Google 캘린더에 일정을 등록합니다.");
 
     var calBtn = CardService.newTextButton()    // 일정 분석 및 등록 버튼
         .setText("📆 일정 분석 및 등록")
