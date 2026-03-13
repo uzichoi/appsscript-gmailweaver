@@ -1,4 +1,4 @@
-11:28:22,953 graphrag.cli.index INFO Logging enabled at D:\2025°Ü¿ï¹æÇÐ\GmailWeaver\logs\indexing-engine.log
+11:28:22,953 graphrag.cli.index INFO Logging enabled at D:\2025ï¿½Ü¿ï¿½ï¿½ï¿½ï¿½\GmailWeaver\logs\indexing-engine.log
 11:28:25,97 httpx INFO HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
 11:28:25,647 httpx INFO HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
 11:28:25,656 graphrag.cli.index INFO Starting pipeline run. dry_run=False
@@ -305,7 +305,7 @@
     },
     "workflows": null
 }
-11:28:25,666 graphrag.storage.file_pipeline_storage INFO Creating file storage at D:\2025°Ü¿ï¹æÇÐ\GmailWeaver\output
+11:28:25,666 graphrag.storage.file_pipeline_storage INFO Creating file storage at D:\2025ï¿½Ü¿ï¿½ï¿½ï¿½ï¿½\GmailWeaver\output
 11:28:25,667 graphrag.index.input.factory INFO loading input from root_dir=input
 11:28:25,667 graphrag.index.input.factory INFO using file storage for input
-11:28:25,694 graphrag.storage.file_pipeline_storage INFO search D:\2025°Ü¿ï¹æÇÐ\GmailWeaver\input for files matching .*\.txt$
+11:28:25,694 graphrag.storage.file_pipeline_storage INFO search D:\2025ï¿½Ü¿ï¿½ï¿½ï¿½ï¿½\GmailWeaver\input for files matching .*\.txt$
