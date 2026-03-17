@@ -226,6 +226,7 @@ function onSaveCalendarWithManualTitle(e) {
       var titleToUse = manualTitle || ev.title || "(제목 없음)";
 
       // description에 표기 추가
+
       var baseDesc = ev.description || "";
       var stamp = "GmailWeaver에서 저장됨";
       var desc = baseDesc ? (stamp + "\n\n" + baseDesc) : stamp;

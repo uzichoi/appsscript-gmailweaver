@@ -202,7 +202,6 @@ function _answerCard(query, answer) {
         .setText("← 홈으로 돌아가기")   // 텍스트 설정
         .setTextButtonStyle(CardService.TextButtonStyle.TEXT)  // 버튼 스타일 설정
         .setOnClickAction(CardService.newAction().setFunctionName("_goBackHome")))) // 클릭 시 _goBackHome() 함수가 실행되도록 설정
-
     .build();   // 카드 객체 완성 (빌드)
 
   return CardService.newActionResponseBuilder() // 완성된 객체를 새 카드로 push하여 navigate (화면 전환)
@@ -210,8 +209,8 @@ function _answerCard(query, answer) {
     .build();
 }
 
-// 공통 유틸리티 함수
 
+// 공통 유틸리티 함수
 // 카드 스택을 루트(홈)까지 모두 pop하여 홈 화면으로 돌아가는 함수
 function _goBackHome(e) {      
   return CardService.newActionResponseBuilder()
