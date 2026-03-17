@@ -15,6 +15,11 @@ from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
+# Job 이용 공통함수 import
+from util.jobs.job_store import *
+from util.graphrag import run_graph_pipeline
+from config.setting import *
+
 # 환경변수 로드
 load_dotenv("src/parquet/.env") # src/parquet/.env를 사용하는 이유: GraphRAG 설정(settings.yaml)과 API 키가 같은 디렉터리에 위치하기 때문
 
@@ -27,19 +32,6 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
-
-# 경로 상수 정의
-MAIL_DIR = "src/parquet/input"  # 업로드된 메일 텍스트 파일들을 저장할 폴더
-MAIL_LATEST_PATH = os.path.join(MAIL_DIR, "mail_latest.txt")    # 최신 메일 스냅샷 파일의 고정 경로
-GRAPH_BUILD_SCRIPT = "src/mail2json.py"     # 메일 텍스트 → 그래프 JSON 변환 스크립트 경로
-GRAPH_JSON_PATH = "src/json/graphml_data.json"  # mail2json.py가 생성하는 그래프 JSON 결과 파일의 경로
-GRAPHRAG_ROOT = "./src/parquet"     # GraphRAG 작업 루트 디렉터리
-
-# 메모리 기반 Job 저장소
-# 서버 재시작 시 모든 Job 정보 소멸 (영속성 없음)
-# 멀티 워커(gunicorn -w 2 이상) 환경에서는 워커 간 공유 불가 → 운영 시 Redis 등 외부 저장소로 대체 필요
-# 현재 Job 청소(cleanup) 로직 없음. 장시간 운영 시 메모리 누수 가능성
-_jobs = {}
 
 # 유틸 함수: GraphRAG CLI 실행
 def _run_graphrag(message, resMethod, resType):
@@ -158,7 +150,8 @@ def run_query_async():
     
     # uuid4: 랜덤 UUID 생성. [:8]로 앞 8자리만 사용 (충돌 가능성 낮고 가독성 좋음)
     job_id = str(uuid.uuid4())[:8]
-    _jobs[job_id] = {"status": "pending", "result": None, "resType": resType}
+    create_job(job_id, job_type="query")
+    update_job(job_id, status="pending", result=None, resType=resType)
 
     def _worker():  # 백그라운드 스레드에서 실행되는 실제 작업 함수
         try:
@@ -172,12 +165,10 @@ def run_query_async():
             else:
                 result = answer
 
-            _jobs[job_id]["status"] = "done"
-            _jobs[job_id]["result"] = result
+            update_job(job_id, status="done", result=result)
 
         except Exception as e:
-            _jobs[job_id]["status"] = "error"
-            _jobs[job_id]["result"] = str(e)
+            update_job(job_id, status="error", result=str(e))
 
     # daemon=True: 메인 프로세스 종료 시 스레드도 함께 종료
     threading.Thread(target=_worker, daemon=True).start()
@@ -186,7 +177,7 @@ def run_query_async():
 # 엔드포인트: GET /job-status/<job_id>
 @app.route('/job-status/<job_id>', methods=['GET'])
 def job_status(job_id):     # 비동기 Job의 현재 상태와 결과를 반환
-    job = _jobs.get(job_id)
+    job = get_job(job_id)
     if not job:
         return jsonify({"status": "not_found"}), 404
 
@@ -254,51 +245,22 @@ def upload():   # Gmail 메일 데이터를 수신하여 저장하고, 그래프
         f.write(content)
 
     # 2, 3단계: 그래프 빌드 및 GraphRAG 인덱싱
-    try:
-        graph_dir = os.path.dirname(GRAPH_JSON_PATH)
-        if graph_dir:
-            os.makedirs(graph_dir, exist_ok=True)
+    # GraphRAG 파이프라인을 백그라운드에서 실행
+    job_id = str(uuid.uuid4())[:8]
 
-        print("[UPLOAD] building graph... script:", GRAPH_BUILD_SCRIPT)
+    create_job(job_id, job_type="index")
+    update_job(job_id, message="업로드 완료, 그래프 파이프라인 시작")
 
-        env = os.environ.copy()
-        env["PYTHONUTF8"] = "1"
-        env["PYTHONIOENCODING"] = "utf-8"
-        env["RICH_DISABLE"] = "1"
+    threading.Thread(
+        target=run_graph_pipeline,
+        args=(job_id,),
+        daemon=True
+    ).start()
 
-        # 2단계: mail2json.py 실행
-        r = subprocess.run(
-            [sys.executable, "-X", "utf8", GRAPH_BUILD_SCRIPT],
-            check=True,           # returncode != 0이면 CalledProcessError 발생
-            stdout=sys.stdout,    # 자식 프로세스 출력을 현재 서버 콘솔에 직접 출력
-            stderr=sys.stderr,
-            env=env,
-        )
-        if r.stdout: print("[UPLOAD] graph build stdout:\n", r.stdout)
-        if r.stderr: print("[UPLOAD] graph build stderr:\n", r.stderr)
-
-        # 3단계: graphrag index 실행
-        print("[UPLOAD] building graphrag index... root:", GRAPHRAG_ROOT)
-        r2 = subprocess.run(
-            [sys.executable, "-X", "utf8", "-m", "graphrag", "index", "--root", GRAPHRAG_ROOT],
-            check=True,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            env=env,
-        )
-        if r2.stdout: print("[UPLOAD] index stdout:\n", r2.stdout)
-        if r2.stderr: print("[UPLOAD] index stderr:\n", r2.stderr)
-
-    except subprocess.CalledProcessError as e:
-        # check=True에 의해 발생. returncode로 어느 단계에서 실패했는지 확인 가능
-        print("[UPLOAD] build failed. returncode:", e.returncode)
-        return jsonify({"ok": False, "error": "graph build failed", "returncode": e.returncode}), 500
-    except Exception as e:
-        print("[UPLOAD] unexpected error:", str(e))
-        return jsonify({"ok": False, "error": str(e)}), 500
 
     return jsonify({
         "ok": True,
+        "job_id": job_id,
         "saved_path": os.path.abspath(file_path),
         "latest_path": os.path.abspath(MAIL_LATEST_PATH),
         "content_length": len(content),
@@ -342,7 +304,7 @@ def static_fonts(path):
 @app.route('/calendar-events', methods=['POST'])
 @app.route('/calendar-events', methods=['POST'])
 def calendar_events():
-    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzuZ8CJdGBVGp2kqqmqwm43yW_wVoeDex6efJnpEe7fCTQXXtueEl2SVSFjvtrW-sB4/exec"
+    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwAk_JabdKuGUHIVcaKeEnY1DUiYb0uqkiu-KdUG67Zf1U3D8k-F06RGS5043k_fZS8MQ/exec"
     data = request.json or {}
     res = requests.post(WEB_APP_URL, json=data, allow_redirects=True)
     print("[calendar] status:", res.status_code)
