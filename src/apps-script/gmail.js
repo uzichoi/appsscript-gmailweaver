@@ -1,51 +1,71 @@
-// ============================================================
 // src/apps-script/gmail.js
 // Gmail 동기화, 라벨, 캘린더, 단일 메일 업로드
-// ============================================================
 
-// ── 동기화 버튼 핸들러 ─────────────────────────────────────
-
-function onSyncNewOnly_(e) {
-  return _runSync_(false);
+// 동기화 버튼 핸들러  
+// 서버에 없는 메일 추가
+function onSyncNewOnly(e) {
+  return _runSync(false);
 }
 
-function onSyncAll_(e) {
-  return _runSync_(true);
+// 전체 갱신 (보낸 메일 포함)
+function onSyncAll(e) {
+  return _runSync(true);
 }
 
-function _runSync_(includeAll) {
+// Gmail 동기화
+function _runSync(includeAll) {
   try {
     var query   = includeAll ? "in:inbox OR in:sent" : "in:inbox";
-    var threads = GmailApp.search(query, 0, 500);
+    var threads = GmailApp.search(query, 0, 50);
     var myEmail = Session.getActiveUser().getEmail();
-
     var allText = "";
-    var count   = 0;
+    var count = 0;
+    var allAttachments = []; 
 
     threads.forEach(function(thread) {
       thread.getMessages().forEach(function(msg) {
         count++;
-        allText += buildMessageText_(msg, myEmail) + "\n";
+
+        // 1) TXT용 메일 블록 누적
+        allText += _buildMessageText(msg, myEmail, count) + "\n";
+
+        // 2) 서버 전송용 첨부 payload 누적
+        allAttachments = allAttachments.concat(_buildAttachmentPayload(msg));
       });
     });
 
-    var filename = "gmail_sync_" + (includeAll ? "all" : "inbox") + "_" + dateToYmdHms_(new Date()) + ".txt";
+    var filename = "gmail_sync_" + (includeAll ? "all" : "inbox") + "_" + _dateToYmdHms(new Date()) + ".txt";
 
-    UrlFetchApp.fetch(TunnelURL + "/upload", {
+    var res = UrlFetchApp.fetch(TunnelURL + "/upload", {  // 응답
       method: "post",
       contentType: "application/json",
-      payload: JSON.stringify({ filename: filename, content: allText })
+      payload: JSON.stringify({   // 페이로드. 전송되는 데이터 자체
+        filename: filename,
+        content: allText,
+        attachment: allAttachments
+      }),
+      muteHttpExceptions: true
     });
 
-    return _toast_("✅ " + count + "개 메일을 서버로 전송했습니다.");
+    var code = res.getResponseCode();
+    var text = res.getContentText();
+
+    if (code < 200 || code >= 300) {  
+      throw new Error("upload failed: " + code + " / " + text);
+    }
+
+    Logger.log("upload success: " + code + " / " + text);
+    Logger.log("메일 수: " + count);
+    Logger.log("첨부 전송 개수: " + allAttachments.length);
+
+    return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
   } catch (err) {
-    return _toast_("⚠️ 동기화 실패: " + err.message);
+    return _toast("⚠️ 동기화 실패: " + err.message);
   }
 }
 
-// ── 라벨 적용 (선택된 메일) ───────────────────────────────
-
-function onApplyLabelToMessage_(e) {
+// 라벨 적용 (선택된 메일)
+function onApplyLabelToMessage(e) {
   var inputs     = (e && e.commonEventObject && e.commonEventObject.formInputs) || {};
   var parameters = (e && e.commonEventObject && e.commonEventObject.parameters) || {};
 
@@ -55,8 +75,8 @@ function onApplyLabelToMessage_(e) {
 
   var messageId = parameters.messageId || "";
 
-  if (!labelName) return _toast_("라벨 이름을 입력해주세요.");
-  if (!messageId) return _toast_("메시지 ID를 찾을 수 없습니다.");
+  if (!labelName) return _toast("라벨 이름을 입력해주세요.");
+  if (!messageId) return _toast("메시지 ID를 찾을 수 없습니다.");
 
   try {
     var msg    = GmailApp.getMessageById(messageId);
@@ -66,29 +86,31 @@ function onApplyLabelToMessage_(e) {
     if (!label) label = GmailApp.createLabel(labelName);
 
     thread.addLabel(label);
-    return _toast_("✅ \"" + labelName + "\" 라벨이 적용되었습니다.");
+    return _toast("✅ \"" + labelName + "\" 라벨이 적용되었습니다.");
   } catch (err) {
-    return _toast_("⚠️ 라벨 적용 실패: " + err.message);
+    return _toast("⚠️ 라벨 적용 실패: " + err.message);
   }
 }
-function onExtractAndAddCalendar_(e) {
+
+// 추출 및 캘린더 등록
+function onExtractAndAddCalendar(e) {
   var parameters = (e && e.commonEventObject && e.commonEventObject.parameters) || {};
   var messageId  = parameters.messageId || "";
 
-  if (!messageId) return _toast_("메시지 ID를 찾을 수 없습니다.");
+  if (!messageId) return _toast("메시지 ID를 찾을 수 없습니다.");
 
   var msg;
   try {
     msg = GmailApp.getMessageById(messageId);
   } catch (err) {
-    return _toast_("⚠️ 메일을 불러오지 못했습니다: " + err.message);
+    return _toast("⚠️ 메일을 불러오지 못했습니다: " + err.message);
   }
 
   var subject = msg.getSubject() || "(제목 없음)";
-  var body    = msg.getPlainBody() || "";
+  var body = msg.getPlainBody() || "";
 
   // OpenAI 직접 호출 엔드포인트로 변경
-  var raw, data;
+  var data;
   try {
     var res = UrlFetchApp.fetch(TunnelURL + "/extract-calendar", {
       method: "post",
@@ -98,38 +120,137 @@ function onExtractAndAddCalendar_(e) {
     });
     data = JSON.parse(res.getContentText());
   } catch (err) {
-    return _toast_("⚠️ 서버 오류: " + err.message);
+    return _toast("⚠️ 서버 오류: " + err.message);
   }
 
   var events = data.events || [];
-  if (!events.length) return _toast_("📅 날짜/일정 정보를 찾지 못했습니다.");
+  if (!events.length) return _toast("📅 날짜/일정 정보를 찾지 못했습니다.");
 
-  var cal   = CalendarApp.getDefaultCalendar();
+  // messageId 별로 추출결과 임시 저장 (수동 제목 저장 버튼에서 재사용)
+  _saveExtractedEvents(messageId, events, subject); 
+
+  // 입력칸 + 저장 버튼 카드로 보여주기
+  return _buildCalendarConfirmCard(messageId, events, subject);
+}
+
+// 추출 결과를 userProperties에 저장 (messageId별)
+function _saveExtractedEvents(messageId, events, subject) { 
+  var key = "GW_CAL_" + messageId;
+  var payload = {
+    savedAt: new Date().toISOString(),
+    subject: subject || "",
+    events: events || []
+  };
+  PropertiesService.getUserProperties().setProperty(key, JSON.stringify(payload));
+}
+
+// 사용자 입력 제목 & 추출된 데이터 기반으로 구글 캘린더에 일정 등록
+function _buildCalendarConfirmCard(messageId, events, subject) { 
+  var first = events[0] || {};
+
+  // 추출 미리보기 텍스트 (첫 이벤트 중심으로)
+  var previewLines = [];
+  previewLines.push("<b>추출된 일정(1개 기준 미리보기)</b>");
+  if (first.startTime) previewLines.push("• 시작: " + first.startTime);
+  if (first.endTime)   previewLines.push("• 종료: " + first.endTime);
+  if (first.title)     previewLines.push("• 제목: " + first.title);
+  if (first.description) previewLines.push("• 설명: " + first.description);
+
+  var preview = CardService.newTextParagraph()
+    .setText(previewLines.join("<br/>"));
+
+  var titleInput = CardService.newTextInput()
+    .setFieldName("manualTitle")
+    .setTitle("일정 제목")
+    .setHint("제목을 입력하지 않으면 자동 생성되는 제목으로 저장됩니다")
+    .setValue("");
+
+  var saveBtn = CardService.newTextButton()
+    .setText("일정 저장")
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setOnClickAction(
+      CardService.newAction()
+        .setFunctionName("onSaveCalendarWithManualTitle")
+        .setParameters({ messageId: messageId })
+    );
+
+  var section = CardService.newCardSection()
+    .setHeader("📅 일정 저장")
+    .addWidget(preview)
+    .addWidget(titleInput)
+    .addWidget(saveBtn);
+
+  return CardService.newCardBuilder()
+    .setHeader(CardService.newCardHeader().setTitle("GmailWeaver"))
+    .addSection(section)
+    .build();
+}
+
+// 입력한 제목으로 캘린더 저장
+function onSaveCalendarWithManualTitle(e) { 
+  var inputs     = (e && e.commonEventObject && e.commonEventObject.formInputs) || {};
+  var parameters = (e && e.commonEventObject && e.commonEventObject.parameters) || {};
+
+  var messageId = parameters.messageId || "";
+  if (!messageId) return _toast("메시지 ID를 찾을 수 없습니다.");
+
+  var manualTitle = (inputs.manualTitle && inputs.manualTitle.stringInputs)
+    ? String(inputs.manualTitle.stringInputs.value[0] || "").trim()
+    : "";
+
+  // 저장해둔 추출결과 로드
+  var key = "GW_CAL_" + messageId;
+  var raw = PropertiesService.getUserProperties().getProperty(key);
+  if (!raw) return _toast("⚠️ 추출 결과를 찾을 수 없습니다. 다시 '일정 분석'을 눌러주세요.");
+
+  var payload;
+  try {
+    payload = JSON.parse(raw);
+  } catch (err) {
+    return _toast("⚠️ 저장된 데이터가 손상되었습니다. 다시 시도해주세요.");
+  }
+
+  var events = (payload && payload.events) ? payload.events : [];
+  if (!events.length) return _toast("📅 저장할 일정이 없습니다.");
+
+  var cal = CalendarApp.getDefaultCalendar();
   var added = 0;
-  events.forEach(function(ev) {
+
+  events.forEach(function(ev, idx) {
     try {
       var start = new Date(ev.startTime);
       var end   = ev.endTime ? new Date(ev.endTime) : new Date(start.getTime() + 3600000);
-      cal.createEvent(ev.title || subject, start, end, { description: ev.description || "" });
+
+      // 첫 이벤트는 입력 제목 적용, 나머지는 원래 제목 유지
+      // (전부 같은 제목으로 저장하고 싶으면: var titleToUse = manualTitle; 로 바꾸면 됨)
+      var titleToUse = manualTitle || ev.title || "(제목 없음)";
+
+      // description에 표기 추가
+      var baseDesc = ev.description || "";
+      var stamp = "GmailWeaver에서 저장됨";
+      var desc = baseDesc ? (stamp + "\n\n" + baseDesc) : stamp;
+
+      cal.createEvent(titleToUse, start, end, { description: desc });
       added++;
-    } catch(_) {}
+    } catch (err) {
+      Logger.log("calendar save error: " + err);
+    }
   });
 
-  return _toast_(added > 0 ? "📅 " + added + "개 일정이 등록되었습니다." : "⚠️ 일정 등록 실패");
+  return _toast(added > 0 ? "📅 " + added + "개 일정이 저장되었습니다." : "⚠️ 일정 저장 실패");
 }
 
-// ── 단일 메일 서버 업로드 ──────────────────────────────────
-
-function onUploadSingleMessage_(e) {
+// 단일 메일 서버 업로드  
+function onUploadSingleMessage(e) {
   var parameters = (e && e.commonEventObject && e.commonEventObject.parameters) || {};
   var messageId  = parameters.messageId || "";
 
-  if (!messageId) return _toast_("메시지 ID를 찾을 수 없습니다.");
+  if (!messageId) return _toast("메시지 ID를 찾을 수 없습니다.");
 
   try {
     var msg     = GmailApp.getMessageById(messageId);
     var myEmail = Session.getActiveUser().getEmail();
-    var content  = buildMessageText_(msg, myEmail);
+    var content  = _buildMessageText(msg, myEmail);
     var filename = "gmail_single_" + messageId + ".txt";
 
     UrlFetchApp.fetch(TunnelURL + "/upload", {
@@ -138,42 +259,123 @@ function onUploadSingleMessage_(e) {
       payload: JSON.stringify({ filename: filename, content: content })
     });
 
-    return _toast_("☁️ 서버로 전송 완료");
+    return _toast("☁️ 서버로 전송 완료");
   } catch (err) {
-    return _toast_("⚠️ 전송 실패: " + err.message);
+    return _toast("⚠️ 전송 실패: " + err.message);
   }
 }
 
-// ── 유틸 ───────────────────────────────────────────────────
+// 공통 유틸 
+// 메일 1개의 TXT 블록 생성
+function _buildMessageText(msg, myEmail, mailIndex) {
+  // 1) 기본 정보
+  var id = msg.getId();         // 메시지 ID
+  var from = msg.getFrom() || ""; // 송신인
+  var to = msg.getTo() || "";   // 수신인
+  var cc = msg.getCc() || "";   // 참조
+  var subject = msg.getSubject() || "(제목 없음)";  // 메시지 제목
+  var date = Utilities.formatDate(  // 날짜
+    msg.getDate(),
+    Session.getScriptTimeZone(),
+    "yyyy-MM-dd HH:mm:ss"   // 문자열로 정규화
+  );
 
-function buildMessageText_(msg, myEmail) {
+  // 2) 수신/발신 구분
   var direction = msg.getFrom().includes(myEmail) ? "발신" : "수신";
-  var atts = msg.getAttachments({ includeInlineImages: false });
-  var attInfo = atts.length === 0
-    ? "없음"
-    : atts.map(function(a, i) {
-        return (i + 1) + ". " + a.getName() + " | " + a.getContentType() + " | " + a.getSize() + " bytes";
-      }).join("\n  ");
+
+  // 3) 첨부파일 처리
+  var atts = msg.getAttachments({ includeInlineImages: false });  // 본문에 인라인 이미지로 삽입된 경우 제외
+  var attachmentInfo = "";  // 첨부파일 정보. TXT 기록용
+
+  if (atts.length === 0) {
+    attachmentInfo = "첨부파일: 없음";
+  } else {
+    attachmentInfo = "첨부파일:\n" + atts.map(function(a, i) {
+      var name = a.getName() || ("attachment_" + (i + 1));
+      var mime = a.getContentType() || "application/octet-stream";
+      var size = a.getSize();
+
+      var lowerName = name.toLowerCase();
+      var isPdf = lowerName.endsWith(".pdf") ||
+                  mime === "application/pdf" ||
+                  mime === "application/haansoftpdf";
+      var isDocx = lowerName.endsWith(".docx") ||
+                   mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+      var status = "";
+      if (!(isPdf || isDocx)) {
+        status = "업로드 제외: 형식 미지원";
+      } else if (size > 5 * 1024 * 1024) {
+        status = "업로드 제외: 용량 초과";
+      } else {
+        status = "업로드 포함";
+      }
+
+      return "  " + (i + 1) + ". " + name + " | " + mime + " | " + size + " bytes | " + status;
+    }).join("\n");
+  }
+
+  var body = msg.getPlainBody() || "";
 
   return [
     "============================================================",
-    "ID: "        + msg.getId(),
-    "구분: "      + direction,
-    "제목: "      + (msg.getSubject() || "(제목 없음)"),
-    "보낸 사람: " + msg.getFrom(),
-    "받는 사람: " + msg.getTo(),
-    "날짜: "      + msg.getDate(),
+    "[메일 " + mailIndex + "]",
+    "ID: " + id,
+    "구분: " + direction,
+    "제목: " + subject,
+    "보낸 사람: " + from,
+    "받는 사람: " + to,
+    "참조(CC): " + cc,
+    "날짜: " + date,
     "",
-    "[첨부파일]",
-    attInfo,
+    "[첨부파일 정보]",
+    attachmentInfo,
     "",
     "[본문]",
-    msg.getPlainBody() || "",
+    body,
     "============================================================"
   ].join("\n");
 }
 
-function dateToYmdHms_(d) {
+// 서버 전송용 첨부 payload 생성
+function _buildAttachmentPayload(msg) {
+  var atts = msg.getAttachments({ includeInlineImages: false });  // 본문에 인라인 이미지로 삽입된 경우 제외
+  var id = msg.getId();
+  var payload = []; 
+  var MAX_ATTACHMENT_SIZE = 5 * 1024 * 1024 * 1024; // 5GB 크기 제한
+
+  atts.forEach(function(att, i) {
+    var name = att.getName() || ("attachment_" + (i + 1));
+    var mime = att.getContentType() || "application/octet-stream";
+    var size = att.getSize();
+    var lowerName = name.toLowerCase();
+
+    // PDF
+    var isPdf = lowerName.endsWith(".pdf") ||   
+                mime === "application/pdf" ||
+                mime === "application/haansoftpdf";
+
+    // DOCS
+    var isDocx = lowerName.endsWith(".docx") ||
+                 mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+    // 형식 & 크기 조건
+    if ((isPdf || isDocx) && size <= MAX_ATTACHMENT_SIZE) {
+      var dataBase64 = Utilities.base64Encode(att.getBytes());
+
+      payload.push({
+        mail_id: id,
+        name: name,
+        mime: mime,
+        data_base64: dataBase64
+      });
+    }
+  });
+
+  return payload;
+}
+
+function _dateToYmdHms(d) {
   var pad = function(n) { return String(n).padStart(2, "0"); };
   return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) +
     "_" + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
