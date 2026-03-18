@@ -54,7 +54,7 @@ function _runSync(mode) {
     newMessages.forEach(function(msg){
       count++;
       allText += _buildMessageText(msg, myEmail, count) + "\n";
-      allAttachments = allAttachments.comcat(_buildAttachmentPatload(msg));
+      allAttachments = allAttachments.concat(_buildAttachmentPayload(msg));
     });
 
     if (count === 0) {
