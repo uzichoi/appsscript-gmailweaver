@@ -17,7 +17,7 @@ function _runSync(mode) {
   try {
     var props = PropertiesService.getUserProperties();
     var lastSyncMs = Number(props.getProperty("GW_LAST_SYNC_MS")||"0");
-    var threads;
+    var threads = [];
 
     var myEmail = Session.getActiveUser().getEmail();
     var allText = "";
@@ -25,29 +25,68 @@ function _runSync(mode) {
     var allAttachments = []; 
 
     if (mode === "rewrite") {
-      var wuery = "in:inbox OR in:sent";
-      threads = GmailApp.search(MediaQueryList, 0, 200);
+      var queryAll = "in:inbox OR in:sent";
+      threads = GmailApp.search(queryAll, 0, 200);
+
+      threads.forEach(function(thread) {
+        thread.getMessages().forEach(function(msg) {
+          count++;
+          allText += _buildMessageText(msg, myEmail, count) + "\n";
+          allAttachments = allAttachments.concat(_buildAttachmentPayload(msg));
+        });
+      });
+
+      if (count === 0){
+        return _toast("📭 전송할 메일이 없습니다.");
+      }
+
+      var filenameAll = "gmail_sync_all_" + _dateToYmdHms(new Date()) + ".txt";
+
+      var resAll = UrlFetchApp.fetch(TunnelURL + "/upload", {
+        method: "post",
+        contentType: "application/json",
+        payload: JSON.stringify({
+          filename: filenameAll,
+          content: allText,
+          attachment: allAttachments,
+          syncmode: "rewrite"
+        }),
+        muteHttpExceptions: true
+      });
+
+      var codeAll = resAll.getResponseCode();
+      var textAll = resAll.getContentText();
+
+      if (codeAll < 200 || codeAll >= 300) {
+        throw new Error("upload failed: " + codeAll + " / " + textAll);
+      }
+
+      props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
+
+      Logger.log("upload success: " + codeAll + " / " + textAll);
+      Logger.log("메일 수: " + count);
+      Logger.log("첨부 전송 개수: " + allAttachments.length);
+
+      return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
     }
 
-    else {
-      var query = "in:inbox OR in:sent";
-      threads = GmailApp.search(query, 0, 200);
+    var queryNew = "in:inbox OR in:sent";
+    threads = GmailApp.search(queryNew, 0, 200);
 
-      var newMessages = [];
+    var newMessages = [];
 
-      threads.forEach(function(thread){
-        thread.getMessages().forEach(function(msg) {
-          var msgTime = msg.getDate().getTime();
-
-          if(msgTime > lastSyncMs) {
-            newMessages.push(msg);
-          }
+    threads.forEach(function(thread) {
+      thread.getMessages().forEach(function(msg) {
+        var msgTime = msg.getDate().getTime();
+        if (msgTime > lastSyncMs) {
+          newMessages.push(msg);
+        }
       });
     });
 
     // 새로운 메일을 위로 정렬
     newMessages.sort(function(a, b){
-      return b.getDate().getTime() - b.getDate().getTime();
+      return b.getDate().getTime() - a.getDate().getTime();
     });
 
     // 새로운 메일만 추가할 때 처리
@@ -63,76 +102,33 @@ function _runSync(mode) {
 
     var filename = "gmail_sync_inbox_" + _dateToYmdHms(new Date()) + ".txt";
 
-    var res = UrlFetchApp.fetch(TunnelURL + "/upload", {
+    var resNew = UrlFetchApp.fetch(TunnelURL + "/upload", {
       method: "post",
         contentType: "application/json",
         payload: JSON.stringify({
           filename: filename,
           content: allText,
           attachment: allAttachments,
-          syncmode: mode
+          syncmode: "append"
         }),
         muteHttpExceptions: true
     });
 
-    var code = res.getResponseCode();
-    var text = res.getContentText();
+    var codeNew = resNew.getResponseCode();
+    var textNew = resNew.getContentText();
 
-    if (code < 200 || code >=300){
-      throw new Error("upload failed: " + code + " / " + text);
+    if (codeNew < 200 || codeNew >=300){
+      throw new Error("upload failed: " + codeNew + " / " + textNew);
     }
 
     // 동기화 시간 저장
     props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
 
-    Logger.log("upload success: " + code + " / " + text);
+    Logger.log("upload success: " + codeNew + " / " + textNew);
     Logger.log("메일 수: " + count);
     Logger.log("첨부 전송 개수: " + allAttachments.length);
 
-    return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
-  }
-
-    // 전체 갱신 할 때 처리
-    threads.forEach(function(thread) {
-      thread.getMessages().forEach(function(msg) {
-        count++;
-
-        // 1) TXT용 메일 블록 누적
-        allText += _buildMessageText(msg, myEmail, count) + "\n";
-
-        // 2) 서버 전송용 첨부 payload 누적
-        allAttachments = allAttachments.concat(_buildAttachmentPayload(msg));
-      });
-    });
-
-    var filename = "gmail_sync_" + (includeAll ? "all" : "inbox") + "_" + _dateToYmdHms(new Date()) + ".txt";
-
-    var res = UrlFetchApp.fetch(TunnelURL + "/upload", {  // 응답
-      method: "post",
-      contentType: "application/json",
-      payload: JSON.stringify({   // 페이로드. 전송되는 데이터 자체
-        filename: filename,
-        content: allText,
-        attachment: allAttachments
-      }),
-      muteHttpExceptions: true
-    });
-
-    var code = res.getResponseCode();
-    var text = res.getContentText();
-
-    if (code < 200 || code >= 300) {  
-      throw new Error("upload failed: " + code + " / " + text);
-    }
-
-    // 동기화 시간 저장
-    props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
-
-    Logger.log("upload success: " + code + " / " + text);
-    Logger.log("메일 수: " + count);
-    Logger.log("첨부 전송 개수: " + allAttachments.length);
-
-    return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
+    return _toast("✅ " + count + "개 새 메일을 서버로 전송했습니다.");
   } catch (err) {
     return _toast("⚠️ 동기화 실패: " + err.message);
   }
@@ -326,13 +322,23 @@ function onUploadSingleMessage(e) {
     var msg     = GmailApp.getMessageById(messageId);
     var myEmail = Session.getActiveUser().getEmail();
     var content  = _buildMessageText(msg, myEmail);
+    var attachments = _buildAttachmentPayload(msg);
     var filename = "gmail_single_" + messageId + ".txt";
 
-    UrlFetchApp.fetch(TunnelURL + "/upload", {
+    var res = UrlFetchApp.fetch(TunnelURL + "/upload", {
       method: "post",
       contentType: "application/json",
-      payload: JSON.stringify({ filename: filename, content: content })
+      payload: JSON.stringify({ filename: filename, content: content }),
+      muteHttpException: true
     });
+
+    var code = res.getResponseCode();
+    var text = res.getContentText();
+
+    if (code < 200 || code >= 300) {
+      throw new Error("upload failed: " + code + " / " + text);
+    }
+
 
     return _toast("☁️ 서버로 전송 완료");
   } catch (err) {
