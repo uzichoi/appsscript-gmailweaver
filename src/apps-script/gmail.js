@@ -4,24 +4,95 @@
 // 동기화 버튼 핸들러  
 // 서버에 없는 메일 추가
 function onSyncNewOnly(e) {
-  return _runSync(false);
+  return _runSync("append");
 }
 
 // 전체 갱신 (보낸 메일 포함)
 function onSyncAll(e) {
-  return _runSync(true);
+  return _runSync("rewrite");
 }
 
 // Gmail 동기화
-function _runSync(includeAll) {
+function _runSync(mode) {
   try {
-    var query   = includeAll ? "in:inbox OR in:sent" : "in:inbox";
-    var threads = GmailApp.search(query, 0, 50);
+    var props = PropertiesService.getUserProperties();
+    var lastSyncMs = Number(props.getProperty("GW_LAST_SYNC_MS")||"0");
+    var threads;
+
     var myEmail = Session.getActiveUser().getEmail();
     var allText = "";
     var count = 0;
     var allAttachments = []; 
 
+    if (mode === "rewrite") {
+      var wuery = "in:inbox OR in:sent";
+      threads = GmailApp.search(MediaQueryList, 0, 200);
+    }
+
+    else {
+      var query = "in:inbox OR in:sent";
+      threads = GmailApp.search(query, 0, 200);
+
+      var newMessages = [];
+
+      threads.forEach(function(thread){
+        thread.getMessages().forEach(function(msg) {
+          var msgTime = msg.getDate().getTime();
+
+          if(msgTime > lastSyncMs) {
+            newMessages.push(msg);
+          }
+      });
+    });
+
+    // 새로운 메일을 위로 정렬
+    newMessages.sort(function(a, b){
+      return b.getData().getTime() - b.getDate().getTime();
+    });
+
+    // 새로운 메일만 추가할 때 처리
+    newMessages.forEach(function(msg){
+      count++;
+      allText += _buildMessageText(msg, myEmail, count) + "\n";
+      allAttachments = allAttachments.comcat(_buildAttachmentPatload(msg));
+    });
+
+    if (count === 0) {
+      return _toast("📭 새로 추가할 메일이 없습니다.");
+    }
+
+    var filename = "gmail_sync_inbox_" + _dateToYmdHms(new Date()) + ".txt";
+
+    var res = UrlFetchApp.fetch(TunnelURL + "/upload", {
+      method: "post",
+        contentType: "application/json",
+        payload: JSON.stringify({
+          filename: filename,
+          content: allText,
+          attachment: allAttachments,
+          syncmode: mode
+        }),
+        muteHttpExceptions: true
+    });
+
+    var code = res.getResponseCode();
+    var text = res.getContentText();
+
+    if (code < 200 || code >=300){
+      throw new Error("upload failed: " + code + " / " + text);
+    }
+
+    // 동기화 시간 저장
+    props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
+
+    Logger.log("upload success: " + code + " / " + text);
+    Logger.log("메일 수: " + count);
+    Logger.log("첨부 전송 개수: " + allAttachments.length);
+
+    return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
+  }
+
+    // 전체 갱신 할 때 처리
     threads.forEach(function(thread) {
       thread.getMessages().forEach(function(msg) {
         count++;
@@ -53,6 +124,9 @@ function _runSync(includeAll) {
     if (code < 200 || code >= 300) {  
       throw new Error("upload failed: " + code + " / " + text);
     }
+
+    // 동기화 시간 저장
+    props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
 
     Logger.log("upload success: " + code + " / " + text);
     Logger.log("메일 수: " + count);
