@@ -35,6 +35,7 @@ def build_graph_json(job_id, env):
 # [ 백그라운드 ] GraphRAG 인덱싱 시작
 def build_graphrag_index(job_id, env):
     update_job(job_id, progress=20, message="GraphRAG 인덱싱 시작")
+    print("[JOB] graphrag index subprocess started")
 
     p = subprocess.Popen(
         [sys.executable, "-X", "utf8", "-m", "graphrag", "index", "--root", GRAPHRAG_ROOT],
@@ -63,6 +64,8 @@ def build_graphrag_index(job_id, env):
             )
 
     rc = p.wait()
+    print(f"[JOB] graphrag index subprocess finished rc={rc}")
+    append_job_log(job_id, f"[SYSTEM] graphrag index finished rc={rc}")
     if rc != 0:
         raise subprocess.CalledProcessError(
             rc,
@@ -71,6 +74,7 @@ def build_graphrag_index(job_id, env):
     
 def build_graphrag_update(job_id, env):
     update_job(job_id, progress=20, message="GraphRAG 업데이트 시작")
+    print("[JOB] graphrag index subprocess started", flush=True)
 
     p = subprocess.Popen(
         [sys.executable, "-X", "utf8", "-m", "graphrag", "update", "--root", GRAPHRAG_ROOT],
@@ -99,6 +103,8 @@ def build_graphrag_update(job_id, env):
             )
 
     rc = p.wait()
+    print(f"[JOB] graphrag index subprocess finished rc={rc}", flush=True)
+    append_job_log(job_id, f"[SYSTEM] graphrag index finished rc={rc}")
     if rc != 0:
         raise subprocess.CalledProcessError(
             rc,
