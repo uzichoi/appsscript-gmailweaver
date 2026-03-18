@@ -1,4 +1,5 @@
 import os
+import time
 
 from util.jobs.job_store import *
 from util.jobs.job_run import build_graph_json,build_graphrag_index, build_graphrag_update
@@ -63,5 +64,3 @@ def run_graph_update_pipeline(job_id):
             error=str(e),
             finished_at=time.time(),
         )
-
-
