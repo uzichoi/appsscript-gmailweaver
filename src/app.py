@@ -9,10 +9,19 @@ import json
 import threading
 import uuid
 import openai
+import base64
+import requests
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
+import fitz  # PyMuPDF
+from docx import Document
+
+# Job 이용 공통함수 import
+from util.jobs.job_store import *
+from util.jobs.job_run import start_graph_pipeline_background
+from config.settings import *
 
 # 환경변수 로드
 load_dotenv("src/parquet/.env") # src/parquet/.env를 사용하는 이유: GraphRAG 설정(settings.yaml)과 API 키가 같은 디렉터리에 위치하기 때문
@@ -27,20 +36,9 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-# 경로 상수 정의
-MAIL_DIR = "src/parquet/input"  # 업로드된 메일 텍스트 파일들을 저장할 폴더
-MAIL_LATEST_PATH = os.path.join(MAIL_DIR, "mail_latest.txt")    # 최신 메일 스냅샷 파일의 고정 경로
-GRAPH_BUILD_SCRIPT = "src/mail2json.py"     # 메일 텍스트 → 그래프 JSON 변환 스크립트 경로
-GRAPH_JSON_PATH = "src/json/graphml_data.json"  # mail2json.py가 생성하는 그래프 JSON 결과 파일의 경로
-GRAPHRAG_ROOT = "./src/parquet"     # GraphRAG 작업 루트 디렉터리
+# 유틸 함수
 
-# 메모리 기반 Job 저장소
-# 서버 재시작 시 모든 Job 정보 소멸 (영속성 없음)
-# 멀티 워커(gunicorn -w 2 이상) 환경에서는 워커 간 공유 불가 → 운영 시 Redis 등 외부 저장소로 대체 필요
-# 현재 Job 청소(cleanup) 로직 없음. 장시간 운영 시 메모리 누수 가능성
-_jobs = {}
-
-# 유틸 함수: GraphRAG CLI 실행
+# GraphRAG CLI 실행
 def _run_graphrag(message, resMethod, resType):
     def decode_output(b: bytes) -> str:
         # subprocess 결과(bytes)를 문자열로 디코딩
@@ -98,7 +96,8 @@ def _run_graphrag(message, resMethod, resType):
     print(answer)
     return answer.strip()
 
-# 유틸 함수: 텍스트 → 캘린더 JSON 변환
+
+# 텍스트 → 캘린더 JSON 변환
 def _convert_to_calendar_json(text):
     # 자연어 텍스트에서 일정 정보를 추출하여 캘린더 이벤트 JSON으로 변환
     # OpenAI chat completions API를 직접 호출 (GraphRAG 우회, 빠른 응답)
@@ -111,9 +110,15 @@ def _convert_to_calendar_json(text):
                 {
                     "role": "system",
                     "content": (
+                        "너는 이메일 내용을 분석해서 캘린더 일정을 추출하는 도우미야."
                         "날짜/시간/일정 정보를 추출해서 반드시 JSON으로만 응답해. "
-                        "형식: {\"events\": [{\"title\": \"제목\", \"startTime\": \"2026-02-26T09:00:00\", "
-                        "\"endTime\": \"2026-02-26T10:00:00\", \"description\": \"\"}]} "
+                        "이메일의 제목과 본문을 함께 분석해서 캘린더에 적합한 새로운 일정 제목(title)을 만들어."
+                        "메일 제목을 그대로 복사하지 말고, 실제 일정의 목적이 드러나도록 자연스럽고 짧게 작성해."
+                        "예를 들면 '회의 안내' 같은 제목이 있더라도, 본문이 캡스톤 발표 회의에 대한 내용이면 title는 '캡스톤 발표 회의'처럼 만들어."
+                        "title은 5~20자 정도의 짧고 명확한 한국어로 작성해."
+                        "description은 일정과 관련된 핵심 내용을 간단히 넣어"
+                        "형식: {\"events\": [{\"title\": \"제목\", \"startTime\": \"2026-02-26 Time 09:00:00\", "
+                        "\"endTime\": \"2026-02-26 Time 10:00:00\", \"description\": \"\"}]} "
                         "일정 없으면 {\"events\": []}"
                     )
                 },
@@ -129,7 +134,108 @@ def _convert_to_calendar_json(text):
         # OpenAI API 실패 시 빈 이벤트 반환 (서버 오류 전파 방지)
         print(f"[calendar convert error] {e}")
         return { "events": []}
-    
+
+# PDF 파일에서 텍스트 추출
+def _extract_text_from_pdf(file_path):
+    text = ""
+    try:
+        doc = fitz.open(file_path)
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+    except Exception as e:
+        print(f"[PDF Extract Error] {e}")
+    return text
+
+# Word 파일에서 텍스트 추출
+def _extract_text_from_docx(file_path):
+    text = ""
+    try:
+        doc = Document(file_path)
+        for para in doc.paragraphs:
+            text += para.text + "\n"
+    except Exception as e:
+        print(f"[Docx Extract Error] {e}")
+    return text
+
+# 파일명에서 경로/위험 문자 제거
+def _sanitize_filename(name: str) -> str:
+    name = os.path.basename(name or "attachment.bin").strip()
+    name = re.sub(r"[^A-Za-z0-9._-]", "_", name)    # 영숫자, 점, 밑줄, 하이픈만 남기고 나머지는 '_'로 치환
+    return name or "attachment.bin"
+
+# attachment payload에서 base64를 받아 서버 로컬에 파일 저장
+def _save_attachment_from_base64(file_info: dict, save_dir: str) -> tuple[str, str]:
+    original_name = file_info.get("name") or "attachment.bin"
+    safe_name = _sanitize_filename(original_name)
+    mail_id = str(file_info.get("mail_id") or "no_mail_id")
+    data_base64 = file_info.get("data_base64") or ""
+
+    if not data_base64:
+        raise ValueError(f"attachment data_base64 missing: {original_name}")
+
+    os.makedirs(save_dir, exist_ok=True)
+
+    ext = os.path.splitext(safe_name)[1].lower()
+    unique_name = f"{mail_id}_{uuid.uuid4().hex[:8]}{ext or '.bin'}"
+    saved_path = os.path.join(save_dir, unique_name)
+
+    # 혹시 data URL prefix가 붙어오면 제거
+    if "," in data_base64 and "base64" in data_base64[:100]:
+        data_base64 = data_base64.split(",", 1)[1]
+
+    file_bytes = base64.b64decode(data_base64)
+
+    with open(saved_path, "wb") as f:
+        f.write(file_bytes)
+
+    return saved_path, original_name
+
+# 메일 블록에서 'ID: ...' 값을 추출
+def _extract_mail_id_from_block(block: str) -> str | None:
+    m = re.search(r"^\s*ID:\s*(.+?)\s*$", block, re.MULTILINE)
+    return m.group(1).strip() if m else None
+
+# mail_id 기준으로 첨부 텍스트를 각 메일 블록 하단에 삽입한 후 다시 append
+def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: dict[str, list[dict]]) -> str:
+    parts = content.split(MAIL_BLOCK_SEP)   # content는 MAIL_BLOCK_SEP 기준으로 메일 블록들이 이어진 문자열이라고 가정
+    merged_blocks = []
+
+    for part in parts:
+        block = part.strip()
+        if not block:
+            continue
+
+        # 구분선 복원
+        block_text = f"{MAIL_BLOCK_SEP}\n{block}\n{MAIL_BLOCK_SEP}"
+
+        mail_id = _extract_mail_id_from_block(block_text)
+        if not mail_id:
+            merged_blocks.append(block_text)
+            continue
+
+        attachment_entries = attachment_texts_by_mail.get(mail_id, [])
+        if not attachment_entries:
+            merged_blocks.append(block_text)
+            continue
+
+        attachment_section = "\n[첨부 추출 내용]\n"
+        for item in attachment_entries:
+            attachment_section += f"[File name] {item['name']}\n{item['text']}\n"
+
+        # 블록 하단(마지막 구분선 직전)에 삽입
+        insert_pos = block_text.rfind(MAIL_BLOCK_SEP)
+        if insert_pos == -1:
+            merged_blocks.append(block_text + attachment_section)
+        else:
+            merged_blocks.append(
+                block_text[:insert_pos].rstrip() + "\n\n" +
+                attachment_section.rstrip() + "\n" +
+                MAIL_BLOCK_SEP
+            )
+
+    return "\n".join(merged_blocks) + "\n"
+
 # 엔드포인트: POST /extract-calendar
 @app.route('/extract-calendar', methods=['POST'])
 def extract_calendar():     # 이메일 제목 + 본문에서 일정 이벤트를 추출하여 반환
@@ -151,7 +257,8 @@ def run_query_async():
     
     # uuid4: 랜덤 UUID 생성. [:8]로 앞 8자리만 사용 (충돌 가능성 낮고 가독성 좋음)
     job_id = str(uuid.uuid4())[:8]
-    _jobs[job_id] = {"status": "pending", "result": None, "resType": resType}
+    create_job(job_id, job_type="query")
+    update_job(job_id, status="pending", result=None, resType=resType)
 
     def _worker():  # 백그라운드 스레드에서 실행되는 실제 작업 함수
         try:
@@ -165,12 +272,10 @@ def run_query_async():
             else:
                 result = answer
 
-            _jobs[job_id]["status"] = "done"
-            _jobs[job_id]["result"] = result
+            update_job(job_id, status="done", result=result)
 
         except Exception as e:
-            _jobs[job_id]["status"] = "error"
-            _jobs[job_id]["result"] = str(e)
+            update_job(job_id, status="error", result=str(e))
 
     # daemon=True: 메인 프로세스 종료 시 스레드도 함께 종료
     threading.Thread(target=_worker, daemon=True).start()
@@ -179,7 +284,8 @@ def run_query_async():
 # 엔드포인트: GET /job-status/<job_id>
 @app.route('/job-status/<job_id>', methods=['GET'])
 def job_status(job_id):     # 비동기 Job의 현재 상태와 결과를 반환
-    job = _jobs.get(job_id)
+
+    job = get_job(job_id)
     if not job:
         return jsonify({"status": "not_found"}), 404
 
@@ -221,81 +327,119 @@ def run_query():    # GraphRAG 쿼리를 동기 방식으로 실행하고 결과
 
 # 엔드포인트: POST /upload
 @app.route("/upload", methods=["POST"])
-def upload():   # Gmail 메일 데이터를 수신하여 저장하고, 그래프 인덱스를 재구축
+def upload():
+    # 1) 데이터 수신
     data = request.json or {}
-
     filename = data.get("filename") or f"mail_{int(time.time())}.txt"
-    content  = data.get("content") or ""
+    content = data.get("content") or ""
+    attachments = data.get("attachment") or []
 
-    print("[UPLOAD] received filename:", filename)
-    print("[UPLOAD] content length:", len(content))
-    print("[UPLOAD] cwd:", os.getcwd())
-
-    # 1단계: 메일 파일 저장
+    # 2) 저장 디렉토리 준비
     os.makedirs(MAIL_DIR, exist_ok=True)
+    os.makedirs(ATTACHMENT_DIR, exist_ok=True)
+
     file_path = os.path.join(MAIL_DIR, filename)
 
+    # 3) 원본 메일 텍스트 저장
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    # mail_latest.txt: 항상 최신 메일 내용 유지 (덮어쓰기)
-    latest_dir = os.path.dirname(MAIL_LATEST_PATH)
-    if latest_dir:
-        os.makedirs(latest_dir, exist_ok=True)
-
+    # 4) mail_latest.txt 초기화
     with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
         f.write(content)
 
-    # 2, 3단계: 그래프 빌드 및 GraphRAG 인덱싱
-    try:
-        graph_dir = os.path.dirname(GRAPH_JSON_PATH)
-        if graph_dir:
-            os.makedirs(graph_dir, exist_ok=True)
+    extracted_count = 0
+    failed_attachments = []
+    saved_attachment_paths = []
+    attachment_texts_by_mail: dict[str, list[dict]] = {}
 
-        print("[UPLOAD] building graph... script:", GRAPH_BUILD_SCRIPT)
+    # 5) 첨부 저장 + 텍스트 추출 + mail_id별 묶기
+    if attachments:
+        extracted_full_text = f"\n\n{MAIL_BLOCK_SEP}\n"
+        extracted_full_text += "[System] attachment data extract section\n"
 
-        env = os.environ.copy()
-        env["PYTHONUTF8"] = "1"
-        env["PYTHONIOENCODING"] = "utf-8"
-        env["RICH_DISABLE"] = "1"
+        for file_info in attachments:
+            f_name = file_info.get("name") or "attachment.bin"  
+            mime = (file_info.get("mime") or "").lower()        
+            mail_id = str(file_info.get("mail_id") or "").strip()
 
-        # 2단계: mail2json.py 실행
-        r = subprocess.run(
-            [sys.executable, "-X", "utf8", GRAPH_BUILD_SCRIPT],
-            check=True,           # returncode != 0이면 CalledProcessError 발생
-            stdout=sys.stdout,    # 자식 프로세스 출력을 현재 서버 콘솔에 직접 출력
-            stderr=sys.stderr,
-            env=env,
-        )
-        if r.stdout: print("[UPLOAD] graph build stdout:\n", r.stdout)
-        if r.stderr: print("[UPLOAD] graph build stderr:\n", r.stderr)
+            try:
+                # base64 → 서버 로컬 파일 저장
+                saved_path, original_name = _save_attachment_from_base64(file_info, ATTACHMENT_DIR)
+                saved_attachment_paths.append(saved_path)
 
-        # 3단계: graphrag index 실행
-        print("[UPLOAD] building graphrag index... root:", GRAPHRAG_ROOT)
-        r2 = subprocess.run(
-            [sys.executable, "-X", "utf8", "-m", "graphrag", "index", "--root", GRAPHRAG_ROOT],
-            check=True,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
-            env=env,
-        )
-        if r2.stdout: print("[UPLOAD] index stdout:\n", r2.stdout)
-        if r2.stderr: print("[UPLOAD] index stderr:\n", r2.stderr)
+                ext = os.path.splitext(original_name)[-1].lower()
+                file_text = ""
 
-    except subprocess.CalledProcessError as e:
-        # check=True에 의해 발생. returncode로 어느 단계에서 실패했는지 확인 가능
-        print("[UPLOAD] build failed. returncode:", e.returncode)
-        return jsonify({"ok": False, "error": "graph build failed", "returncode": e.returncode}), 500
-    except Exception as e:
-        print("[UPLOAD] unexpected error:", str(e))
-        return jsonify({"ok": False, "error": str(e)}), 500
+                # MIME type 제한
+                if ext == ".pdf" or mime in ("application/pdf", "application/haansoftpdf"):     
+                    file_text = _extract_text_from_pdf(saved_path)
+                elif ext == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                    file_text = _extract_text_from_docx(saved_path)
+                else:
+                    failed_attachments.append({
+                        "name": original_name,
+                        "reason": f"unsupported type: ext={ext}, mime={mime}"
+                    })
+                    continue
+
+                if file_text and file_text.strip():
+                    if mail_id:
+                        attachment_texts_by_mail.setdefault(mail_id, []).append({
+                            "name": original_name,
+                            "text": file_text.strip()
+                        })
+                        extracted_count += 1
+                else:
+                    failed_attachments.append({
+                        "name": original_name,
+                        "reason": "text extraction returned empty"
+                    })
+                    continue
+
+            except Exception as e:
+                failed_attachments.append({
+                    "name": f_name,
+                    "reason": str(e)
+                })
+                print(f"[UPLOAD][ATTACHMENT ERROR] {f_name}: {e}")
+
+       # 6) 메일별 블록 하단에 첨부 텍스트 삽입
+        final_content = content
+        if attachment_texts_by_mail:
+            final_content = _merge_attachments_into_mail_blocks(content, attachment_texts_by_mail)
+
+        with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
+            f.write(final_content)
+
+    # 7) 파이프라인 실행
+    print(f"[UPLOAD] Received filename: {filename}")
+    print(f"[UPLOAD] Content length: {len(content)}")
+    print(f"[UPLOAD] Attachment count received: {len(attachments)}")
+    print(f"[UPLOAD] Attachment extracted count: {extracted_count}")
+    print("[UPLOAD] cwd:", os.getcwd())
+
+    # GraphRAG 파이프라인을 백그라운드에서 실행
+    job_id = str(uuid.uuid4())[:8]
+
+    create_job(job_id, job_type="index")
+    update_job(job_id, message="업로드 완료, 그래프 파이프라인 시작")
+
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+
+    start_graph_pipeline_background(job_id, env)
 
     return jsonify({
-        "ok": True,
-        "saved_path": os.path.abspath(file_path),
-        "latest_path": os.path.abspath(MAIL_LATEST_PATH),
-        "content_length": len(content),
-    })
+            "ok": True,
+            "saved_path": os.path.abspath(file_path),
+            "latest_path": os.path.abspath(MAIL_LATEST_PATH),
+            "attachment_dir": os.path.abspath(ATTACHMENT_DIR),
+            "content_length": len(content),
+            "attachment_received_count": len(attachments),
+            "attachment_extracted_count": extracted_count,
+            "failed_attachments": failed_attachments,
+        })
 
 # 엔드포인트: GET /graph-data
 @app.route("/graph-data", methods=["GET"])
@@ -304,7 +448,46 @@ def graph_data():   # mail2json.py가 생성한 그래프 시각화 데이터를
         return jsonify({"nodes": [], "edges": [], "error": "graph json not found"}), 200
     with open(GRAPH_JSON_PATH, "r", encoding="utf-8") as f:
         return jsonify(json.load(f))
+    
+# 엔드포인트: GET /dashboard/ (Gentella 웹앱 서빙)
+@app.route('/dashboard/', defaults={'path': 'production/index.html'})
+@app.route('/dashboard/<path:path>')
+def dashboard(path):
+    dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist')
+    # /dashboard/index2.html 요청 → production/index2.html로 매핑
+    if not path.startswith('production/') and path.endswith('.html'):
+        path = 'production/' + path
+    return send_from_directory(dist_dir, path)
 
+# dist 루트 정적 파일 서빙 (assets, js, fonts)
+@app.route('/assets/<path:path>')
+def static_assets(path):
+    dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist', 'assets')
+    return send_from_directory(dist_dir, path)
+
+@app.route('/js/<path:path>')
+def static_js(path):
+    dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist', 'js')
+    return send_from_directory(dist_dir, path)
+
+@app.route('/fonts/<path:path>')
+def static_fonts(path):
+    dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist', 'fonts')
+    return send_from_directory(dist_dir, path)
+
+# 웹앱 URL 변경 필요
+@app.route('/calendar-events', methods=['POST'])
+def calendar_events():
+    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz3bAOxML5BZSSJcMFM1or5jY8K4NVwliHk_Rbe9jXYVBXbYM05Fl-1bPG1909_38hZ/exec"
+    data = request.json or {}
+    res = requests.post(WEB_APP_URL, json=data, allow_redirects=True)
+    print("[calendar] status:", res.status_code)
+    print("[calendar] response:", res.text[:500])
+    try:
+        return jsonify(res.json())
+    except Exception:
+        return jsonify({"events": [], "error": res.text[:200]}), 200
+    
 # 서버 진입점
 if __name__ == '__main__':
     # host='0.0.0.0': 모든 네트워크 인터페이스에서 수신 (localhost 외부 접근 허용)
