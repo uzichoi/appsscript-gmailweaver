@@ -67,7 +67,7 @@ function _runSync(mode) {
       Logger.log("메일 수: " + count);
       Logger.log("첨부 전송 개수: " + allAttachments.length);
 
-      return _toast("✅ " + count + "개 메일을 서버로 전송했습니다.");
+      return _toast("✅ " + count + "개 메일, 첨부 " + allAttachments.length + "개를 서버로 전송했습니다.");
     }
 
     var queryNew = "in:inbox OR in:sent";
