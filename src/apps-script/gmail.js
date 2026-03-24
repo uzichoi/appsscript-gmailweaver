@@ -321,6 +321,7 @@ function onSaveCalendarWithManualTitle(e) {
 
   return _toast(added > 0 ? "📅 " + added + "개 일정이 저장되었습니다." : "⚠️ 일정 저장 실패");
 }
+
 // 공통 유틸 
 // 메일 1개의 TXT 블록 생성
 function _buildMessageText(msg, myEmail, mailIndex) {
@@ -363,18 +364,12 @@ function _buildMessageText(msg, myEmail, mailIndex) {
       var lowerName = name.toLowerCase();
 
       // 확장자 및 MIME 타입 체크 확장
-      var isPdf = lowerName.endsWith(".pdf") || mime.indexOf("pdf") !== -1;
-      var isDocx = lowerName.endsWith(".docx") || mime.indexOf("wordprocessingml") !== -1;
-      var isHwp = lowerName.endsWith(".hwp") || mime.indexOf("hwp") !== -1 || mime.indexOf("haansoft") !== -1;
-      var isPptx = lowerName.endsWith(".pptx") || mime.indexOf("presentationml") !== -1;
-      var isXlsx = lowerName.endsWith(".xlsx") || mime.indexOf("spreadsheetml") !== -1;
-      var isCsv = lowerName.endsWith(".csv") || mime === "text/csv";
-      var isTxt = lowerName.endsWith(".txt") || mime === "text/plain";
+      var isSupported = lowerName.endsWith(".pdf") || lowerName.endsWith(".docx") || 
+                        lowerName.endsWith(".hwp") || lowerName.endsWith(".pptx") || 
+                        lowerName.endsWith(".xlsx") || lowerName.endsWith(".csv") || 
+                        lowerName.endsWith(".txt");
 
       var status = "";
-    
-      // 지원하는 형식인지 확인 (서버의 _extract 함수들과 매칭)
-      var isSupported = isPdf || isDocx || isHwp || isPptx || isXlsx || isCsv || isTxt;
 
       if (!isSupported) {
         status = "업로드 제외: 형식 미지원";
@@ -396,8 +391,8 @@ function _buildMessageText(msg, myEmail, mailIndex) {
     "ID: " + id,
     "구분: " + direction,
     "제목: " + subject,
-    "보낸 사람: " + from,
-    "받는 사람: " + to,
+    "발신인: " + from,
+    "수신인: " + to,
     "참조(CC): " + cc,
     "날짜: " + date,
     "",
@@ -408,7 +403,7 @@ function _buildMessageText(msg, myEmail, mailIndex) {
     "[첨부파일 정보]",
     attachmentInfo,
     "",
-    "[본문]",
+    "[메일 본문]",
     body,
     "============================================================"
   ].join("\n");
@@ -427,29 +422,29 @@ function _buildAttachmentPayload(msg) {
     var size = att.getSize();
     var lowerName = name.toLowerCase();
 
-    // PDF
-    var isPdf = lowerName.endsWith(".pdf") ||   
-                mime === "application/pdf" ||
-                mime === "application/haansoftpdf";
+    var isPdf  = lowerName.endsWith(".pdf")  || mime === "application/pdf" || mime === "application/haansoftpdf";
+    var isDocx = lowerName.endsWith(".docx") || mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    var isHwp  = lowerName.endsWith(".hwp")  || mime === "application/x-hwp" || mime === "application/haansofthwp";
+    var isPptx = lowerName.endsWith(".pptx") || mime === "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    var isXlsx = lowerName.endsWith(".xlsx") || mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    var isCsv  = lowerName.endsWith(".csv")  || mime === "text/csv" || mime === "application/csv";
+    var isTxt  = lowerName.endsWith(".txt")  || mime === "text/plain";
 
-    // DOCS
-    var isDocx = lowerName.endsWith(".docx") ||
-                 mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    var isSupported = isPdf || isDocx || isHwp || isPptx || isXlsx || isCsv || isTxt;
 
-    // 형식 & 크기 조건
-    if ((isPdf || isDocx) && size <= MAX_ATTACHMENT_SIZE) {
-      var dataBase64 = Utilities.base64Encode(att.getBytes());
-
-      payload.push({
-        mail_id: id,
-        name: name,
-        mime: mime,
-        data_base64: dataBase64
-      });
-    }
+    // base64 인코딩 후 payload push
+    if (isSupported && size <= MAX_ATTACHMENT_SIZE) {
+        var dataBase64 = Utilities.base64Encode(att.getBytes());
+        payload.push({
+          mail_id: id,
+          name: name,
+          mime: mime,
+          data_base64: dataBase64
+        });
+      }
   });
-
-  return payload;
+  
+  return payload;  
 }
 
 function _dateToYmdHms(d) {
