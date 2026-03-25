@@ -1,5 +1,4 @@
 // src/apps-script/common.js
-
 var TunnelURL = "https://laevorotatory-nonnutritively-nelle.ngrok-free.dev";
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzuZ8CJdGBVGp2kqqmqwm43yW_wVoeDex6efJnpEe7fCTQXXtueEl2SVSFjvtrW-sB4/exec";
 
@@ -137,8 +136,9 @@ function _buildGmailMessageCard(e) {
     var calSection = CardService.newCardSection()
         .addWidget(calBtn)      // 버튼 위
         .addWidget(calDesc);    // 설명 아래 (섹션 헤더 없음)
-
+        
     return CardService.newCardBuilder()
+
         .setHeader(
             CardService.newCardHeader()
                 .setTitle("이 메일에 대한 작업을 선택하세요")
@@ -148,3 +148,4 @@ function _buildGmailMessageCard(e) {
         .addSection(calSection)
         .build();
 }
+
