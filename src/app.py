@@ -19,6 +19,10 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import fitz  # PyMuPDF
 from docx import Document
+import olefile
+import csv
+from pptx import Presentation
+from openpyxl import load_workbook
 
 # Job 이용 공통함수 import
 from util.jobs.job_store import *
@@ -160,6 +164,99 @@ def _extract_text_from_docx(file_path):
         print(f"[Docx Extract Error] {e}")
     return text
 
+# HWP 파일에서 텍스트 추출
+def _extract_text_from_hwp(file_path):
+    text = ""
+    try:
+        f = olefile.OleFileIO(file_path)
+        dirs = f.listdir()
+        sections = [d for d in dirs if "BodyText/Section" in "/".join(d)]
+        
+        for section in sections:
+            stream = f.openstream("/".join(section))
+            data = stream.read()
+            try:
+                # 가공되지 않은 바이너리에서 한글 텍스트 패턴 추출 시도
+                decoded_text = data.decode("utf-16", errors="ignore")
+                # 불필요한 제어문자 및 바이너리 찌꺼기 제거 (정규식 활용 가능)
+                clean_text = "".join(c for c in decoded_text if c.isalnum() or c in " \n\t.,()[]")
+                text += clean_text + "\n"
+            except Exception as e:
+                print(f"[HWP Decode Error in {section}] {e}")
+                
+        f.close()
+    except Exception as e:
+        print(f"[HWP Extract Error] {e}")
+    return text
+
+# TXT 파일에서 텍스트 추출 
+def _extract_text_from_txt(file_path):
+    text = ""
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            text = f.read()
+    except UnicodeDecodeError:
+        try:
+            with open(file_path, "r", encoding="cp949") as f:
+                text = f.read()
+        except Exception as e:
+            print(f"[TXT Extract Error] {e}")
+    except Exception as e:
+        print(f"[TXT Extract Error] {e}")
+    return text
+
+# PPTX 파일에서 텍스트 추출
+def _extract_text_from_pptx(file_path):
+    text = ""
+    try:
+        prs = Presentation(file_path)
+        for slide in prs.slides:
+            for shape in slide.shapes:
+                if hasattr(shape, "text") and shape.text:
+                    text += shape.text + "\n"
+    except Exception as e:
+        print(f"[PPTX Extract Error] {e}")
+    return text
+
+# XLSX 파일에서 텍스트 추출
+def _extract_text_from_xlsx(file_path):
+    text = ""
+    try:
+        wb = load_workbook(file_path, data_only=True)
+        for ws in wb.worksheets:
+            text += f"[Sheet] {ws.title}\n"
+            for row in ws.iter_rows(values_only=True):
+                row_values = [str(cell) if cell is not None else "" for cell in row]
+                # 빈 행은 스킵
+                if any(v.strip() for v in row_values):
+                    text += " | ".join(row_values) + "\n"
+            text += "\n"
+    except Exception as e:
+        print(f"[XLSX Extract Error] {e}")
+    return text
+
+# CSV 파일에서 텍스트 추출
+def _extract_text_from_csv(file_path):
+    text = ""
+    try:
+        with open(file_path, "r", encoding="utf-8", newline="") as f:
+            reader = csv.reader(f)
+            for row in reader:
+                row_values = [str(cell) if cell is not None else "" for cell in row]
+                text += " | ".join(row_values) + "\n"
+    except UnicodeDecodeError:
+        try:
+            with open(file_path, "r", encoding="cp949", newline="") as f:
+                reader = csv.reader(f)
+                for row in reader:
+                    row_values = [str(cell) if cell is not None else "" for cell in row]
+                    text += " | ".join(row_values) + "\n"
+        except Exception as e:
+            print(f"[CSV Extract Error] {e}")
+    except Exception as e:
+        print(f"[CSV Extract Error] {e}")
+    return text
+
 # 파일명에서 경로/위험 문자 제거
 def _sanitize_filename(name: str) -> str:
     name = os.path.basename(name or "attachment.bin").strip()
@@ -200,7 +297,7 @@ def _extract_mail_id_from_block(block: str) -> str | None:
 
 # mail_id 기준으로 첨부 텍스트를 각 메일 블록 하단에 삽입한 후 다시 append
 def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: dict[str, list[dict]]) -> str:
-    parts = content.split(MAIL_BLOCK_SEP)   # content는 MAIL_BLOCK_SEP 기준으로 메일 블록들이 이어진 문자열이라고 가정
+    parts = content.split(MAIL_BLOCK_SEP)    # content는 MAIL_BLOCK_SEP 기준으로 메일 블록들이 이어진 문자열이라고 가정
     merged_blocks = []
 
     for part in parts:
@@ -221,7 +318,7 @@ def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: 
             merged_blocks.append(block_text)
             continue
 
-        attachment_section = "\n[첨부 추출 내용]\n"
+        attachment_section = "\n[첨부파일 본문]\n"
         for item in attachment_entries:
             attachment_section += f"[File name] {item['name']}\n{item['text']}\n"
 
@@ -465,6 +562,16 @@ def upload():
                     file_text = _extract_text_from_pdf(saved_path)
                 elif ext == ".docx" or mime == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
                     file_text = _extract_text_from_docx(saved_path)
+                elif ext == ".hwp" or mime in ("application/x-hwp", "application/haansofthwp"): # 추가
+                    file_text = _extract_text_from_hwp(saved_path)
+                elif ext == ".txt" or mime == "text/plain":
+                    file_text = _extract_text_from_txt(saved_path)
+                elif ext == ".pptx" or mime == "application/vnd.openxmlformats-officedocument.presentationml.presentation":
+                    file_text = _extract_text_from_pptx(saved_path)
+                elif ext == ".xlsx" or mime == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                    file_text = _extract_text_from_xlsx(saved_path)
+                elif ext == ".csv" or mime in ("text/csv", "application/csv"):
+                    file_text = _extract_text_from_csv(saved_path)
                 else:
                     failed_attachments.append({
                         "name": original_name,
@@ -607,8 +714,6 @@ def upload():
             "skipped_count": skipped_count,
             "attachment_received_count": len(attachments),
             "attachment_extracted_count": extracted_count,
-            "added_count": added_count,
-            "skipped_count": skipped_count,
             "failed_attachments": failed_attachments,
         })
 
@@ -649,7 +754,7 @@ def static_fonts(path):
 # 웹앱 URL 변경 필요
 @app.route('/calendar-events', methods=['POST'])
 def calendar_events():
-    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzR29ycMGq8ig5H8NMB4fciIwTleDtN-7UJKH-agPx_uK3tN4yKtkfe9v0lZ_kAvS8a/exec"
+    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxukCvAI3IAFJeDHifDOS2EDc-TbnT354LLNjgaDfs/dev"
     data = request.json or {}
     res = requests.post(WEB_APP_URL, json=data, allow_redirects=True)
     print("[calendar] status:", res.status_code)

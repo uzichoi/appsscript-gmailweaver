@@ -1,7 +1,7 @@
 // src/apps-script/common.js
 
-var TunnelURL = "https://unmatching-sandy-hydrocinnamyl.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzR29ycMGq8ig5H8NMB4fciIwTleDtN-7UJKH-agPx_uK3tN4yKtkfe9v0lZ_kAvS8a/exec";   // Apps Script Web App으로 배포된 URL
+var TunnelURL = "https://transpalmar-christine-noneducatory.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxukCvAI3IAFJeDHifDOS2EDc-TbnT354LLNjgaDfs/dev";   // Apps Script Web App으로 배포된 URL
 
 // 공식 엔트리 포인트 (외부에서 호출)
 function onHomepage(e) {    // Gmail 사이드 패널을 처음 열거나, 메일을 선택하지 않은 상태일 때 자동 호출
