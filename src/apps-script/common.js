@@ -26,6 +26,18 @@ function _webpageBtn() {
         );
 }
 
+// 그래프 시각화 버튼
+function _graphBtn() {
+    return CardService.newTextButton()
+        .setText("그래프")
+        .setTextButtonStyle(CardService.TextButtonStyle.TEXT)
+        .setOpenLink(
+            CardService.newOpenLink()
+                .setUrl(TunnelURL+"/graph-view")
+                .setOpenAs(CardService.OpenAs.FULL_SIZE)
+        );
+}
+
 // 홈 카드
 function _buildHomeCard() {
     var syncNewBtn = CardService.newTextButton()
@@ -77,6 +89,7 @@ function _buildHomeCard() {
         )
         .addSection(mainSection)
         .addSection(searchSection)
+        .addSection(CardService.newCardSection().addWidget(_graphBtn())) // 그래프 보기 버튼
         .build();
 }
 
