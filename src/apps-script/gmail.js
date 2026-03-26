@@ -61,6 +61,7 @@ function _runSync(mode) {
         throw new Error("upload failed: " + codeAll + " / " + textAll);
       }
 
+      // 동기화 시간 저장
       props.setProperty("GW_LAST_SYNC_MS", String(Date.now()));
 
       Logger.log("upload success: " + codeAll + " / " + textAll);
@@ -384,6 +385,13 @@ function _buildMessageText(msg, myEmail, mailIndex) {
   }
 
   var body = msg.getPlainBody() || "";
+  // 본문 input txt 필요없는 요소 줄이기
+  body = body.replace(/\r\n/g, "\n"); // \r\n (윈도우 방식) -> \n
+  body = body.replace(/\[image:[^\]]*\]/gi, ""); // [image: ] 제거
+  body = body.replace(/[ \t]+/g, " "); // 연속 스페이스, 탭 -> 1개
+  body = body.replace(/\n{2,}/g, "\n"); // 연속 줄바꿈 -> 1줄 줄바꿈
+  body = body.replace(/ \n/g, "\n"); // 줄 끝 스페이스 제거
+  body = body.replace(/\n /g, "\n"); // 줄 시작 스페이스 제거
 
   return [
     "============================================================",
