@@ -36,6 +36,9 @@ load_dotenv("src/parquet/.env") # src/parquet/.env를 사용하는 이유: Graph
 app = Flask(__name__)   # Flask 앱 객체 생성. 해당 파일이 서버의 메인 애플리케이션이라는 의미
 CORS(app)   # Cross-Origin Resource Sharing 허용 (다른 환경에서 이 서버의 API를 호출할 수 있도록)
 
+# Apps Script Web App URL (캘린더, 라벨 등 모든 프록시에서 공통 사용)
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzuZ8CJdGBVGp2kqqmqwm43yW_wVoeDex6efJnpEe7fCTQXXtueEl2SVSFjvtrW-sB4/exec"
+
 # 한글 출력 시 깨지거나 에러 나는 것 방지 (utf-8 인코딩 및 대체 문자 처리)
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -257,6 +260,7 @@ def _extract_text_from_csv(file_path):
         print(f"[CSV Extract Error] {e}")
     return text
 
+
 # 파일명에서 경로/위험 문자 제거
 def _sanitize_filename(name: str) -> str:
     name = os.path.basename(name or "attachment.bin").strip()
@@ -297,7 +301,7 @@ def _extract_mail_id_from_block(block: str) -> str | None:
 
 # mail_id 기준으로 첨부 텍스트를 각 메일 블록 하단에 삽입한 후 다시 append
 def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: dict[str, list[dict]]) -> str:
-    parts = content.split(MAIL_BLOCK_SEP)    # content는 MAIL_BLOCK_SEP 기준으로 메일 블록들이 이어진 문자열이라고 가정
+    parts = content.split(MAIL_BLOCK_SEP)   # content는 MAIL_BLOCK_SEP 기준으로 메일 블록들이 이어진 문자열이라고 가정
     merged_blocks = []
 
     for part in parts:
@@ -318,7 +322,7 @@ def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: 
             merged_blocks.append(block_text)
             continue
 
-        attachment_section = "\n[첨부파일 본문]\n"
+        attachment_section = "\n[첨부 추출 내용]\n"
         for item in attachment_entries:
             attachment_section += f"[File name] {item['name']}\n{item['text']}\n"
 
@@ -334,6 +338,7 @@ def _merge_attachments_into_mail_blocks(content: str, attachment_texts_by_mail: 
             )
 
     return "\n".join(merged_blocks) + "\n"
+
 
 # 텍스트에서 메일별로 구분
 def _split_mail_blocks(text):
@@ -530,9 +535,20 @@ def upload():
         sync_mode = "rewrite"
         fallback_to_rewrite = True
 
+
     # 2) 저장 디렉토리 준비
     os.makedirs(MAIL_DIR, exist_ok=True)
     os.makedirs(ATTACHMENT_DIR, exist_ok=True)
+
+    file_path = os.path.join(MAIL_DIR, filename)
+
+    # 3) 원본 메일 텍스트 저장
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    # 4) mail_latest.txt 초기화
+    with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
+        f.write(content)
 
     extracted_count = 0
     failed_attachments = []
@@ -585,7 +601,12 @@ def upload():
                             "name": original_name,
                             "text": file_text.strip()
                         })
-                        extracted_count += 1
+                    else:
+                        failed_attachments.append({
+                            "name": original_name,
+                            "reason": "mail_id missing"
+                        })
+                    extracted_count += 1
                 else:
                     failed_attachments.append({
                         "name": original_name,
@@ -600,6 +621,14 @@ def upload():
                 })
                 print(f"[UPLOAD][ATTACHMENT ERROR] {f_name}: {e}")
 
+       # 6) 메일별 블록 하단에 첨부 텍스트 삽입
+        final_content = content
+        if attachment_texts_by_mail:
+            final_content = _merge_attachments_into_mail_blocks(content, attachment_texts_by_mail)
+
+        with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
+            f.write(final_content)
+
     # 7) 파이프라인 실행
     print(f"[UPLOAD] Received filename: {filename}")
     print(f"[UPLOAD] Content length: {len(content)}")
@@ -608,6 +637,7 @@ def upload():
     print(f"[UPLOAD] Requested mode: {requested_mode}")
     print(f"[UPLOAD] Actual mode: {sync_mode}")
     print("[UPLOAD] cwd:", os.getcwd())
+
 
     added_count = 0
     skipped_count = 0
@@ -717,6 +747,7 @@ def upload():
             "failed_attachments": failed_attachments,
         })
 
+
 # 엔드포인트: GET /graph-data
 @app.route("/graph-data", methods=["GET"])
 def graph_data():   # mail2json.py가 생성한 그래프 시각화 데이터를 반환
@@ -725,6 +756,11 @@ def graph_data():   # mail2json.py가 생성한 그래프 시각화 데이터를
     with open(GRAPH_JSON_PATH, "r", encoding="utf-8") as f:
         return jsonify(json.load(f))
     
+# 엔드포인트: GET /index-status
+@app.route("/index-status", methods=["GET"])
+def index_status():     # GraphRAG 인덱싱 완료 여부 반환
+    return jsonify({ "indexed": _is_index_ready() })
+
 # 엔드포인트: GET /dashboard/ (Gentella 웹앱 서빙)
 @app.route('/dashboard/', defaults={'path': 'production/index.html'})
 @app.route('/dashboard/<path:path>')
@@ -751,19 +787,32 @@ def static_fonts(path):
     dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist', 'fonts')
     return send_from_directory(dist_dir, path)
 
-# 웹앱 URL 변경 필요
+# 엔드포인트: POST /calendar-events (Apps Script 캘린더 프록시)
 @app.route('/calendar-events', methods=['POST'])
 def calendar_events():
-    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxukCvAI3IAFJeDHifDOS2EDc-TbnT354LLNjgaDfs/dev"
     data = request.json or {}
-    res = requests.post(WEB_APP_URL, json=data, allow_redirects=True)
+    res = requests.post(WEBAPP_URL, json=data, allow_redirects=True)
     print("[calendar] status:", res.status_code)
     print("[calendar] response:", res.text[:500])
     try:
         return jsonify(res.json())
     except Exception:
         return jsonify({"events": [], "error": res.text[:200]}), 200
-    
+
+# 엔드포인트: POST /labels-proxy (Apps Script 라벨 프록시)
+@app.route('/labels-proxy', methods=['POST'])
+def labels_proxy():
+    data = request.json or {}
+    try:
+        res = requests.post(WEBAPP_URL, json=data, allow_redirects=True)
+        print("[labels] status:", res.status_code)
+        try:
+            return jsonify(res.json())
+        except Exception:
+            return jsonify({"ok": False, "error": res.text[:200]}), 200
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 # 서버 진입점
 if __name__ == '__main__':
     # host='0.0.0.0': 모든 네트워크 인터페이스에서 수신 (localhost 외부 접근 허용)
