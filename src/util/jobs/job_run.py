@@ -106,7 +106,7 @@ def build_graphrag_index(job_id, env):
         append_job_log(job_id, f"[ERROR] build_graphrag_index failed: {e}")
         raise
 
-# 백그라운드: GraphRAG 업데이트
+# 백그라운드: GraphRAG 업데이트 (증분)
 def build_graphrag_update(job_id, env):
     print(f"[JOB][graphrag-update] START job_id={job_id}")
     print(f"[JOB][graphrag-update] cwd={os.getcwd()}")
@@ -120,13 +120,14 @@ def build_graphrag_update(job_id, env):
     append_job_log(job_id, f"[INFO] sys.executable={sys.executable}")
     append_job_log(job_id, f"[INFO] GRAPHRAG_ROOT={GRAPHRAG_ROOT}")
     append_job_log(job_id, f"[INFO] root_exists={os.path.exists(GRAPHRAG_ROOT)}")
-
+    
+    # GraphRAG CLI 실행 명령어 구성
     cmd = [
         sys.executable,
-        "-u",              # 중요: stdout/stderr 버퍼링 최소화
+        "-u",              # stdout/stderr 버퍼링 최소화
         "-X", "utf8",
-        "-m", "graphrag",
-        "update",
+        "-m", "graphrag",  # graphrag 모듈 실행
+        "update",          # graphrag 모듈 update 명령
         "--root", GRAPHRAG_ROOT
     ]
 
@@ -140,6 +141,7 @@ def build_graphrag_update(job_id, env):
         # 세밀한 진행률 파싱 대신 단계 진행률만 갱신
         update_job(job_id, progress=30, message="GraphRAG 업데이트 실행 중")
 
+        # 파이썬 스크립트 실행
         subprocess.run(
             cmd,
             check=True,
@@ -152,17 +154,17 @@ def build_graphrag_update(job_id, env):
         update_job(job_id, progress=90, message="GraphRAG 업데이트 완료")
         print(f"[JOB][graphrag-update] SUCCESS job_id={job_id}")
 
-        # 새로운 데이터 graphml 원래 output graphml과 병합
+        # 새로운 데이터 graphml과 현재 존재하는 output graphml 병합
         output_graphml = os.path.join(GRAPHRAG_ROOT, "output", "graph.graphml")
         update_output_dir = os.path.join(GRAPHRAG_ROOT, "update_output")
         latest = sorted(os.listdir(update_output_dir))[-1]
         delta_graphml = os.path.join(update_output_dir, latest, "delta", "graph.graphml")
         
         if os.path.exists(delta_graphml):
-            G_output = nx.read_graphml(output_graphml)
-            G_delta = nx.read_graphml(delta_graphml)
-            G_merged = nx.compose(G_output, G_delta)
-        nx.write_graphml(G_merged, output_graphml)
+            G_output = nx.read_graphml(output_graphml) # 기존 graphml 
+            G_delta = nx.read_graphml(delta_graphml) # 새로운 graphml
+            G_merged = nx.compose(G_output, G_delta) # 두 graphml 병합
+        nx.write_graphml(G_merged, output_graphml) # 병합 결과 기존 graphml에 덮어씀
 
     except Exception as e:
         print(f"[JOB][graphrag-update][ERROR] job_id={job_id} error={e}")
@@ -202,7 +204,9 @@ def run_graph_update_pipeline(job_id, env):
     try:
         update_job(job_id, progress=0, status="running", message="업데이트 작업 시작")
 
+        # 1단계: json 생성 
         build_graph_json(job_id, env)
+        # 2단계: graphrag 업데이트
         build_graphrag_update(job_id, env)
 
         update_job(job_id, progress=100, status="done", message="업데이트 완료")
@@ -239,11 +243,11 @@ def start_graph_update_pipeline_background(job_id, env):
     append_job_log(job_id, "[INFO] update background thread starting")
 
     t = threading.Thread(
-        target=run_graph_update_pipeline,
+        target=run_graph_update_pipeline, # 실행할 함수 : 그래프라그 업데이트파이프라인 실행 함수
         args=(job_id, env.copy()),
-        daemon=True,
+        daemon=True,                      # app.py 종료 시 같이 종료
     )
-    t.start()
+    t.start() # 스레드 실행 (비동기 시작)
 
     print(f"[JOB][update-pipeline] BACKGROUND THREAD STARTED job_id={job_id} thread={t.name}")
     append_job_log(job_id, f"[INFO] update background thread started name={t.name}")
