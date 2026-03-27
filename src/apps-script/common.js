@@ -3,6 +3,7 @@
 var TunnelURL = "https://interatrial-tana-wishfully.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwAk_JabdKuGUHIVcaKeEnY1DUiYb0uqkiu-KdUG67Zf1U3D8k-F06RGS5043k_fZS8MQ/execv";   // Apps Script Web App으로 배포된 URL
 
+
 const OLIVE = "#c6d8a5";
 
 
@@ -24,6 +25,18 @@ function _webpageBtn() {
         .setOpenLink(
             CardService.newOpenLink()
                 .setUrl(WEBAPP_URL)
+                .setOpenAs(CardService.OpenAs.FULL_SIZE)
+        );
+}
+
+// 그래프 시각화 버튼
+function _graphBtn() {
+    return CardService.newTextButton()
+        .setText("그래프")
+        .setTextButtonStyle(CardService.TextButtonStyle.TEXT)
+        .setOpenLink(
+            CardService.newOpenLink()
+                .setUrl(TunnelURL+"/graph-view")
                 .setOpenAs(CardService.OpenAs.FULL_SIZE)
         );
 }
@@ -79,6 +92,7 @@ function _buildHomeCard() {
         )
         .addSection(mainSection)
         .addSection(searchSection)
+        .addSection(CardService.newCardSection().addWidget(_graphBtn())) // 그래프 보기 버튼
         .build();
 }
 

@@ -30,6 +30,7 @@ def build_graph_json(job_id, paths, env):
     # GraphRAG CLI 실행 명령어 구성
     cmd = [sys.executable, "-u", "-X", "utf8", paths.GRAPH_BUILD_SCRIPT]
     print(f"[JOB][mail2json] CMD={cmd}")
+
     append_job_log(job_id, f"[CMD] {cmd}")
 
     try:
@@ -44,10 +45,10 @@ def build_graph_json(job_id, paths, env):
 
         append_job_log(job_id, "[END] build_graph_json success")
         update_job(job_id, progress=15, message="그래프 데이터 JSON 생성 완료")
-        print(f"[JOB][mail2json] SUCCESS job_id={job_id}")
+        print(f"[JOB][parquet2json] SUCCESS job_id={job_id}")
 
     except Exception as e:
-        print(f"[JOB][mail2json][ERROR] job_id={job_id} error={e}")
+        print(f"[JOB][parquet2json][ERROR] job_id={job_id} error={e}")
         traceback.print_exc()
         append_job_log(job_id, f"[ERROR] build_graph_json failed: {e}")
         raise
@@ -183,10 +184,12 @@ def run_graph_pipeline(job_id, paths,env):
     try:
         update_job(job_id, progress=0, status="running", message="작업 시작")
 
-        # 1단계: JSON 생성
-        build_graph_json(job_id, paths, env) 
-        # 2단계: GraphRAG 인덱싱
+        # 1단계: GraphRAG 인덱싱
         build_graphrag_index(job_id,paths, env)
+
+        # 2단계: JSON 생성
+        build_graph_json(job_id, paths, env) 
+
 
         update_job(job_id, progress=100, status="done", message="인덱싱 완료")
         append_job_log(job_id, "[END] run_graph_pipeline success")
@@ -207,10 +210,12 @@ def run_graph_update_pipeline(job_id, paths, env):
     try:
         update_job(job_id, progress=0, status="running", message="업데이트 작업 시작")
 
-        # 1단계: json 생성 
-        build_graph_json(job_id,paths, env)
-        # 2단계: graphrag 업데이트
+        # 1단계: graphrag 업데이트
         build_graphrag_update(job_id,paths, env)
+
+        # 2단계: json 생성 
+        build_graph_json(job_id,paths, env)
+
 
         update_job(job_id, progress=100, status="done", message="업데이트 완료")
         append_job_log(job_id, "[END] run_graph_update_pipeline success")
