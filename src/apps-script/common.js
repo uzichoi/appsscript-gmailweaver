@@ -1,7 +1,7 @@
 // src/apps-script/common.js
 
 var TunnelURL = "https://interatrial-tana-wishfully.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
-const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwAk_JabdKuGUHIVcaKeEnY1DUiYb0uqkiu-KdUG67Zf1U3D8k-F06RGS5043k_fZS8MQ/execv";   // Apps Script Web App으로 배포된 URL
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwAk_JabdKuGUHIVcaKeEnY1DUiYb0uqkiu-KdUG67Zf1U3D8k-F06RGS5043k_fZS8MQ/exec";   // Apps Script Web App으로 배포된 URL
 
 
 const OLIVE = "#c6d8a5";
@@ -31,12 +31,16 @@ function _webpageBtn() {
 
 // 그래프 시각화 버튼
 function _graphBtn() {
+    var gmailId = Session.getActiveUser().getEmail();
+
     return CardService.newTextButton()
         .setText("그래프")
         .setTextButtonStyle(CardService.TextButtonStyle.TEXT)
         .setOpenLink(
             CardService.newOpenLink()
-                .setUrl(TunnelURL+"/graph-view")
+                .setUrl(
+                    TunnelURL+ "/graph-view?gmail_id=" + encodeURIComponent(gmailId)
+                )
                 .setOpenAs(CardService.OpenAs.FULL_SIZE)
         );
 }

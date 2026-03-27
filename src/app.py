@@ -775,9 +775,19 @@ def upload():
 # 엔드포인트: GET /graph-data
 @app.route("/graph-data", methods=["GET"])
 def graph_data():   # parquet2json.py가 생성한 그래프 시각화 데이터를 반환
-    if not os.path.exists(GRAPH_JSON_PATH):
+    gmail_id = (request.args.get("gmail_id") or "").strip().lower()
+
+    if not gmail_id:
+        return jsonify({"ok": False, "error": "gmail_id가 비어있습니다."}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id) # 각 유저별 고유경로 설정
+
+    if not gmail_id:
+        return jsonify({"ok": False, "error": "gmail_id가 비어있습니다."}), 400
+
+    if not os.path.exists(paths.GRAPH_JSON_PATH):
         return jsonify({"nodes": [], "edges": [], "error": "graph json not found"}), 200
-    with open(GRAPH_JSON_PATH, "r", encoding="utf-8") as f: # 읽기 모드, 한글 깨짐 방지하기
+    with open(paths.GRAPH_JSON_PATH, "r", encoding="utf-8") as f: # 읽기 모드, 한글 깨짐 방지하기
         return jsonify(json.load(f)) # parquet_data.json 파일 읽어서 파이썬 딕셔너리로 변환
 
 # 엔드포인트: GET /graph-view

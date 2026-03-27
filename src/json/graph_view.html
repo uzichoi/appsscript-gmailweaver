@@ -17,8 +17,15 @@
       unknown: "#c9d1d9" // 나머지 = 회색
     };
 
+    const params = new URLSearchParams(window.location.search);
+    const gmailId = params.get("gmail_id"); // 특정 유저의 지식그래프 데이터를 가져오기 위한 식별자
+
+    if (!gmailId) {
+    throw new Error("gmail_id가 없습니다.");
+}
+
     // Flask /graph-data 엔드포인트에서 노드와 엣지 데이터 fetch
-    fetch(window.location.origin + "/graph-data")
+    fetch(`/graph-data?gmail_id=${encodeURIComponent(gmailId)}`)
       .then(res => res.json())
       .then(data => {
         const w = window.innerWidth;
