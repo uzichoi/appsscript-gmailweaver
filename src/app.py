@@ -489,8 +489,8 @@ def _save_mail_contact_stats(blocks: list[str],paths, mode: str = "rewrite"):
             name, email = _parse_contact(from_raw)
             add(name, email, "received")
 
-    os.makedirs(os.path.dirname(paths.MAIL_STATICS_PATH), exist_ok=True)        
     # json 파일에 저장
+    os.makedirs(os.path.dirname(paths.MAIL_STATICS_PATH), exist_ok=True)    
     with open(paths.MAIL_STATICS_PATH, "w", encoding="utf-8") as f:
         json.dump(stats, f, ensure_ascii=False, indent=2) # indent=2 : 사람이 읽기 쉽게 들여쓰기 적용
 
