@@ -13,6 +13,7 @@ import openai
 import base64
 import requests
 import shutil
+import zlib
 
 from dotenv import load_dotenv
 from flask import Flask, request, jsonify, send_from_directory
@@ -144,6 +145,31 @@ def _convert_to_calendar_json(text):
         print(f"[calendar convert error] {e}")
         return { "events": []}
 
+# 첨부파일 텍스트 요약 (공백/줄바꿈 제외 500자 미만이면 생략)
+def _summarize_attachment(text: str, filename: str) -> str:
+    pure_len = len(text.replace(" ", "").replace("\n", ""))
+    if pure_len < 500:
+        return text
+
+    prompt_path = os.path.join("src", "parquet", "prompts", "summarize_attachment.txt")
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        prompt = f.read().strip()
+
+    client = openai.OpenAI(api_key=os.environ.get("GRAPHRAG_API_KEY"))
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": prompt},
+                {"role": "user", "content": f"파일명: {filename}\n\n{text}"}
+            ],
+            max_tokens=150
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        print(f"[summarize_attachment error] {e}")
+        return text
+
 # PDF 파일에서 텍스트 추출
 def _extract_text_from_pdf(file_path):
     text = ""
@@ -179,9 +205,10 @@ def _extract_text_from_hwp(file_path):
             stream = f.openstream("/".join(section))
             data = stream.read()
             try:
-                # 가공되지 않은 바이너리에서 한글 텍스트 패턴 추출 시도
-                decoded_text = data.decode("utf-16", errors="ignore")
-                # 불필요한 제어문자 및 바이너리 찌꺼기 제거 (정규식 활용 가능)
+                # zlib 압축 해제 후 utf-16-le로 디코딩
+                decompressed = zlib.decompress(data, -15)
+                decoded_text = decompressed.decode("utf-16-le", errors="ignore")
+                # 불필요한 제어문자 및 바이너리 찌꺼기 제거
                 clean_text = "".join(c for c in decoded_text if c.isalnum() or c in " \n\t.,()[]")
                 text += clean_text + "\n"
             except Exception as e:
@@ -608,9 +635,10 @@ def upload():
 
                 if file_text and file_text.strip():
                     if mail_id:
+                        summarized = _summarize_attachment(file_text, original_name)  # 요약
                         attachment_texts_by_mail.setdefault(mail_id, []).append({
                             "name": original_name,
-                            "text": file_text.strip()
+                            "text": summarized
                         })
                     else:
                         failed_attachments.append({
