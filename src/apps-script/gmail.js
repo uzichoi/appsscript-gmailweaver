@@ -53,7 +53,8 @@ function _runSync(mode) {
           filename: filenameAll, // 파일명
           content: allText, // 본문
           attachment: allAttachments, // 첨부파일
-          syncmode: "rewrite" // 처리방식
+          syncmode: "rewrite", // 처리방식
+          gmail_id: myEmail
         }),
         muteHttpExceptions: true // HTTP 오류 에러 말고 응답으로 수신
       });
@@ -117,7 +118,8 @@ function _runSync(mode) {
           filename: filename,
           content: allText,
           attachment: allAttachments,
-          syncmode: "append"
+          syncmode: "append",
+          gmail_id: myEmail
       }),
       muteHttpExceptions: true
     });
