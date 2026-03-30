@@ -10,8 +10,8 @@
   --gt-primary-dark: #157a56;      // 깊은 초록
   --gt-primary-light: #22c78a;     // 밝은 민트 그린
   --gt-primary-glow: rgba(26, 158, 110, 0.18);  // 글로우 효과용
-  --gt-secondary: #0f2419;         // 깊은 포레스트 다크 (사이드바)
-  --gt-secondary-mid: #173324;     // 사이드바 중간 톤
+  --gt-secondary: #e74c3c;         // 깊은 포레스트 다크 (사이드바)
+  --gt-secondary-mid: #f05e50;     // 사이드바 중간 톤
   --gt-accent: #34d399;            // 라이트 민트 (포인트)
   --gt-accent-gold: #d4a843;       // 골드 포인트 (고급감)
 
@@ -72,11 +72,13 @@
   // =========================================================================
   // Sidebar
   // =========================================================================
-  --gt-sidebar-text: #c8e6d8;
-  --gt-sidebar-heading: #6b8278;
-  --gt-sidebar-hover-bg: rgba(26, 158, 110, 0.15);
+  --gt-sidebar-text: #b8d9c8;
+  --gt-sidebar-heading: rgba(255,255,255,0.28);
+  --gt-sidebar-hover-bg: rgba(52, 211, 153, 0.10);
   --gt-sidebar-active-text: #ffffff;
-  --gt-sidebar-icon: #5a9e7c;
+  --gt-sidebar-icon: #4d9470;
+  --gt-sidebar-profile-bg: rgba(255,255,255,0.06);
+  --gt-sidebar-profile-border: rgba(52, 211, 153, 0.15);
 
   // =========================================================================
   // Navigation
@@ -169,7 +171,7 @@
   // Gradients — 시그니처 그린 그라디언트
   // =========================================================================
   --gt-gradient-primary: linear-gradient(135deg, #1a9e6e 0%, #0f7a52 100%);
-  --gt-gradient-sidebar: linear-gradient(180deg, #0f2419 0%, #0a1a10 100%);
+  --gt-gradient-sidebar: linear-gradient(180deg, #1a3d2a 0%, #122b1d 60%, #0e2218 100%);
   --gt-gradient-accent: linear-gradient(135deg, #22c78a 0%, #1a9e6e 100%);
   --gt-gradient-gold: linear-gradient(135deg, #d4a843 0%, #b8892c 100%);
   --gt-gradient-card: linear-gradient(145deg, #ffffff 0%, #f4faf7 100%);
@@ -182,7 +184,7 @@
 $gt-primary: #1a9e6e;
 $gt-primary-dark: #157a56;
 $gt-primary-light: #22c78a;
-$gt-secondary: #0f2419;
+$gt-secondary: #e74c3c;
 $gt-accent: #34d399;
 $gt-accent-gold: #d4a843;
 
