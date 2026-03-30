@@ -267,6 +267,7 @@ def run_graph_pipeline(job_id,paths, env, attachment_texts_by_mail=None):
     print(f"[JOB][pipeline] START job_id={job_id}")
     append_job_log(job_id, "[START] run_graph_pipeline")
 
+    user_graphrag_init(paths)
     try:
         update_job(job_id, progress=0, status="running", message="작업 시작")
 
@@ -311,6 +312,7 @@ def run_graph_update_pipeline(job_id, paths, env):
     print(f"[JOB][update-pipeline] START job_id={job_id}")
     append_job_log(job_id, "[START] run_graph_update_pipeline")
 
+    user_graphrag_init(paths)
     try:
         update_job(job_id, progress=0, status="running", message="업데이트 작업 시작")
 
