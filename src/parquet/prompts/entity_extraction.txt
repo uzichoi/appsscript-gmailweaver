@@ -1,121 +1,111 @@
-
 -Goal-
-Given a text document that is potentially relevant to this activity and a list of entity types, identify all entities of those types from the text and all relationships among the identified entities.
- 
+Given a text document and a list of entity types, identify all entities
+and the relationships between them. Output both entities and relationships
+in a single pass using the specified formats.
+
 -Steps-
-1. Identify all entities. For each identified entity, extract the following information:
-- entity_name: Name of the entity, capitalized
-- entity_type: One of the following types: [{entity_types}]
-- entity_description: Comprehensive description of the entity's attributes and activities
-Format each entity as ("entity"{tuple_delimiter}<entity_name>{tuple_delimiter}<entity_type>{tuple_delimiter}<entity_description>)
- 
-2. From the entities identified in step 1, identify all pairs of (source_entity, target_entity) that are *clearly related* to each other.
-For each pair of related entities, extract the following information:
-- source_entity: name of the source entity, as identified in step 1
-- target_entity: name of the target entity, as identified in step 1
-- relationship_description: explanation as to why you think the source entity and the target entity are related to each other
-- relationship_strength: a numeric score indicating strength of the relationship between the source entity and target entity
- Format each relationship as ("relationship"{tuple_delimiter}<source_entity>{tuple_delimiter}<target_entity>{tuple_delimiter}<relationship_description>{tuple_delimiter}<relationship_strength>)
- 
-3. Return output in English as a single list of all the entities and relationships identified in steps 1 and 2. Use **{record_delimiter}** as the list delimiter.
- 
-4. When finished, output {completion_delimiter}
- 
-######################
+1. Identify Entities: Extract entities of the following types: `[{entity_types}]`.
+   For each entity, use this format:
+   `("entity"{tuple_delimiter}<name>{tuple_delimiter}<type>{tuple_delimiter}<description>)`
+   * Email:        `Subject: <subj> | Tone: <tone> | Attachments: <files/None> | Summary: <1-sentence>`
+   * Person:       `Name: <name> | Account: <email/Unknown>`
+   * Topic:        `Priority: <high/mid/low> | Summary: <1-sentence>`
+   * Event:        `Schedule: <YYYY-MM-DD HH:MM> | Location: <place> | Status: <confirmed/tentative>`
+   * Organization: `Context: <dept> | Team: <team>`
+
+2. Identify Relationships: Based on the identified entities, extract clearly supported
+   relationships using these types:
+   `[SENT_BY, SENT_TO, CC_TO, DISCUSSED, BELONGS_TO, SCHEDULED_FOR, WAS_ATTACHED_TO]`
+   Use this format:
+   `("relationship"{tuple_delimiter}<source>{tuple_delimiter}<target>{tuple_delimiter}<type>{tuple_delimiter}<description_in_Korean>{tuple_delimiter}<strength_1_10>)`
+
+   Relationship directions are fixed as follows — do not reverse them:
+   | Type             | Source        | Target        |
+   |------------------|---------------|---------------|
+   | SENT_BY          | Email         | Person        |
+   | SENT_TO          | Email         | Person        |
+   | CC_TO            | Email         | Person        |
+   | DISCUSSED        | Email         | Topic         |
+   | BELONGS_TO       | Person        | Organization  |
+   | SCHEDULED_FOR    | Email         | Event         |
+   | WAS_ATTACHED_TO  | Topic/File    | Email         |
+
+3. Constraints:
+   * If the same entity appears multiple times in the text, extract it only once.
+   * If the sender is unknown, use `Account: Unknown`.
+   * Keep descriptions concise.
+   * Relationship descriptions must be written in Korean.
+   * Output as a single list delimited by `{record_delimiter}`.
+   * End with `{completion_delimiter}`.
+
 -Examples-
-######################
-Example 1:
-Entity_types: ORGANIZATION,PERSON
-Text:
-The Verdantis's Central Institution is scheduled to meet on Monday and Thursday, with the institution planning to release its latest policy decision on Thursday at 1:30 p.m. PDT, followed by a press conference where Central Institution Chair Martin Smith will take questions. Investors expect the Market Strategy Committee to hold its benchmark interest rate steady in a range of 3.5%-3.75%.
-######################
+Example 1
+Entity_types: Email, Person, Organization, Topic
+Text: 김민준(minjun.kim@vocarush.io)이 박서연(seoyeon.park@vocarush.io)에게
+'[Vocarush] 4월 스프린트 계획 확정' 메일을 보냈다. sprint_plan.pdf가 첨부되었고
+공식적인 톤이었다. 김민준은 Vocarush의 Product팀 소속이다.
+
 Output:
-("entity"{tuple_delimiter}CENTRAL INSTITUTION{tuple_delimiter}ORGANIZATION{tuple_delimiter}The Central Institution is the Federal Reserve of Verdantis, which is setting interest rates on Monday and Thursday)
+("entity"{tuple_delimiter}[VOCARUSH] 4월 스프린트 계획 확정{tuple_delimiter}Email{tuple_delimiter}Subject: [Vocarush] 4월 스프린트 계획 확정 | Tone: Formal | Attachments: sprint_plan.pdf | Summary: 4월 스프린트 계획을 공유하는 메일)
 {record_delimiter}
-("entity"{tuple_delimiter}MARTIN SMITH{tuple_delimiter}PERSON{tuple_delimiter}Martin Smith is the chair of the Central Institution)
+("entity"{tuple_delimiter}김민준{tuple_delimiter}Person{tuple_delimiter}Name: 김민준 | Account: minjun.kim@vocarush.io)
 {record_delimiter}
-("entity"{tuple_delimiter}MARKET STRATEGY COMMITTEE{tuple_delimiter}ORGANIZATION{tuple_delimiter}The Central Institution committee makes key decisions about interest rates and the growth of Verdantis's money supply)
+("entity"{tuple_delimiter}박서연{tuple_delimiter}Person{tuple_delimiter}Name: 박서연 | Account: seoyeon.park@vocarush.io)
 {record_delimiter}
-("relationship"{tuple_delimiter}MARTIN SMITH{tuple_delimiter}CENTRAL INSTITUTION{tuple_delimiter}Martin Smith is the Chair of the Central Institution and will answer questions at a press conference{tuple_delimiter}9)
+("entity"{tuple_delimiter}VOCARUSH{tuple_delimiter}Organization{tuple_delimiter}Context: Product | Team: Product Team)
+{record_delimiter}
+("relationship"{tuple_delimiter}[VOCARUSH] 4월 스프린트 계획 확정{tuple_delimiter}김민준{tuple_delimiter}SENT_BY{tuple_delimiter}이메일의 발신자는 김민준이다.{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}[VOCARUSH] 4월 스프린트 계획 확정{tuple_delimiter}박서연{tuple_delimiter}SENT_TO{tuple_delimiter}이메일의 수신자는 박서연이다.{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}김민준{tuple_delimiter}VOCARUSH{tuple_delimiter}BELONGS_TO{tuple_delimiter}김민준은 VOCARUSH 조직에 소속되어 있다.{tuple_delimiter}9)
 {completion_delimiter}
 
-######################
-Example 2:
-Entity_types: ORGANIZATION
-Text:
-TechGlobal's (TG) stock skyrocketed in its opening day on the Global Exchange Thursday. But IPO experts warn that the semiconductor corporation's debut on the public markets isn't indicative of how other newly listed companies may perform.
+---
 
-TechGlobal, a formerly public company, was taken private by Vision Holdings in 2014. The well-established chip designer says it powers 85% of premium smartphones.
-######################
+Example 2
+Entity_types: Email, Person, Event
+Text: 이수아가 '사용자 인터뷰 일정' 메일을 보냈다.
+인터뷰는 2026년 4월 3일 오후 2시 강남 사무실에서 진행된다.
+
 Output:
-("entity"{tuple_delimiter}TECHGLOBAL{tuple_delimiter}ORGANIZATION{tuple_delimiter}TechGlobal is a stock now listed on the Global Exchange which powers 85% of premium smartphones)
+("entity"{tuple_delimiter}사용자 인터뷰 일정{tuple_delimiter}Email{tuple_delimiter}Subject: 사용자 인터뷰 일정 | Tone: Casual | Attachments: None | Summary: 인터뷰 일정을 안내하는 메일)
 {record_delimiter}
-("entity"{tuple_delimiter}VISION HOLDINGS{tuple_delimiter}ORGANIZATION{tuple_delimiter}Vision Holdings is a firm that previously owned TechGlobal)
+("entity"{tuple_delimiter}이수아{tuple_delimiter}Person{tuple_delimiter}Name: 이수아 | Account: Unknown)
 {record_delimiter}
-("relationship"{tuple_delimiter}TECHGLOBAL{tuple_delimiter}VISION HOLDINGS{tuple_delimiter}Vision Holdings formerly owned TechGlobal from 2014 until present{tuple_delimiter}5)
+("entity"{tuple_delimiter}사용자 인터뷰{tuple_delimiter}Event{tuple_delimiter}Schedule: 2026-04-03 14:00 | Location: 강남 사무실 | Status: confirmed)
+{record_delimiter}
+("relationship"{tuple_delimiter}사용자 인터뷰 일정{tuple_delimiter}이수아{tuple_delimiter}SENT_BY{tuple_delimiter}이메일의 발신자는 이수아이다.{tuple_delimiter}10)
+{record_delimiter}
+("relationship"{tuple_delimiter}사용자 인터뷰 일정{tuple_delimiter}사용자 인터뷰{tuple_delimiter}SCHEDULED_FOR{tuple_delimiter}메일을 통해 인터뷰 일정이 안내되었다.{tuple_delimiter}10)
 {completion_delimiter}
 
-######################
-Example 3:
-Entity_types: ORGANIZATION,GEO,PERSON
-Text:
-Five Aurelians jailed for 8 years in Firuzabad and widely regarded as hostages are on their way home to Aurelia.
+---
 
-The swap orchestrated by Quintara was finalized when $8bn of Firuzi funds were transferred to financial institutions in Krohaara, the capital of Quintara.
+Example 3
+Entity_types: Email, Person, Topic
+Text: 최지훈(jihoon.choi@vocarush.io)이 팀 전체에 '[긴급] 서버 장애 대응 방안' 메일을 보냈다.
+메일에서는 서버 다운타임 원인 분석과 긴급 패치 배포 계획이 주요하게 논의되었다. 톤은 격식체였다.
 
-The exchange initiated in Firuzabad's capital, Tiruzia, led to the four men and one woman, who are also Firuzi nationals, boarding a chartered flight to Krohaara.
-
-They were welcomed by senior Aurelian officials and are now on their way to Aurelia's capital, Cashion.
-
-The Aurelians include 39-year-old businessman Samuel Namara, who has been held in Tiruzia's Alhamia Prison, as well as journalist Durke Bataglani, 59, and environmentalist Meggie Tazbah, 53, who also holds Bratinas nationality.
-######################
 Output:
-("entity"{tuple_delimiter}FIRUZABAD{tuple_delimiter}GEO{tuple_delimiter}Firuzabad held Aurelians as hostages)
+("entity"{tuple_delimiter}[긴급] 서버 장애 대응 방안{tuple_delimiter}Email{tuple_delimiter}Subject: [긴급] 서버 장애 대응 방안 | Tone: Formal | Attachments: None | Summary: 서버 장애 원인 분석과 패치 계획을 공유하는 긴급 메일)
 {record_delimiter}
-("entity"{tuple_delimiter}AURELIA{tuple_delimiter}GEO{tuple_delimiter}Country seeking to release hostages)
+("entity"{tuple_delimiter}최지훈{tuple_delimiter}Person{tuple_delimiter}Name: 최지훈 | Account: jihoon.choi@vocarush.io)
 {record_delimiter}
-("entity"{tuple_delimiter}QUINTARA{tuple_delimiter}GEO{tuple_delimiter}Country that negotiated a swap of money in exchange for hostages)
+("entity"{tuple_delimiter}서버 다운타임 원인 분석{tuple_delimiter}Topic{tuple_delimiter}Priority: high | Summary: 서버 장애의 근본 원인을 파악하는 분석 작업)
 {record_delimiter}
+("entity"{tuple_delimiter}긴급 패치 배포 계획{tuple_delimiter}Topic{tuple_delimiter}Priority: high | Summary: 장애 해소를 위한 패치 배포 일정 및 방안)
 {record_delimiter}
-("entity"{tuple_delimiter}TIRUZIA{tuple_delimiter}GEO{tuple_delimiter}Capital of Firuzabad where the Aurelians were being held)
+("relationship"{tuple_delimiter}[긴급] 서버 장애 대응 방안{tuple_delimiter}최지훈{tuple_delimiter}SENT_BY{tuple_delimiter}이메일의 발신자는 최지훈이다.{tuple_delimiter}10)
 {record_delimiter}
-("entity"{tuple_delimiter}KROHAARA{tuple_delimiter}GEO{tuple_delimiter}Capital city in Quintara)
+("relationship"{tuple_delimiter}[긴급] 서버 장애 대응 방안{tuple_delimiter}서버 다운타임 원인 분석{tuple_delimiter}DISCUSSED{tuple_delimiter}메일 본문에서 서버 다운타임 원인 분석을 주요 주제로 다룬다.{tuple_delimiter}9)
 {record_delimiter}
-("entity"{tuple_delimiter}CASHION{tuple_delimiter}GEO{tuple_delimiter}Capital city in Aurelia)
-{record_delimiter}
-("entity"{tuple_delimiter}SAMUEL NAMARA{tuple_delimiter}PERSON{tuple_delimiter}Aurelian who spent time in Tiruzia's Alhamia Prison)
-{record_delimiter}
-("entity"{tuple_delimiter}ALHAMIA PRISON{tuple_delimiter}GEO{tuple_delimiter}Prison in Tiruzia)
-{record_delimiter}
-("entity"{tuple_delimiter}DURKE BATAGLANI{tuple_delimiter}PERSON{tuple_delimiter}Aurelian journalist who was held hostage)
-{record_delimiter}
-("entity"{tuple_delimiter}MEGGIE TAZBAH{tuple_delimiter}PERSON{tuple_delimiter}Bratinas national and environmentalist who was held hostage)
-{record_delimiter}
-("relationship"{tuple_delimiter}FIRUZABAD{tuple_delimiter}AURELIA{tuple_delimiter}Firuzabad negotiated a hostage exchange with Aurelia{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}QUINTARA{tuple_delimiter}AURELIA{tuple_delimiter}Quintara brokered the hostage exchange between Firuzabad and Aurelia{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}QUINTARA{tuple_delimiter}FIRUZABAD{tuple_delimiter}Quintara brokered the hostage exchange between Firuzabad and Aurelia{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}SAMUEL NAMARA{tuple_delimiter}ALHAMIA PRISON{tuple_delimiter}Samuel Namara was a prisoner at Alhamia prison{tuple_delimiter}8)
-{record_delimiter}
-("relationship"{tuple_delimiter}SAMUEL NAMARA{tuple_delimiter}MEGGIE TAZBAH{tuple_delimiter}Samuel Namara and Meggie Tazbah were exchanged in the same hostage release{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}SAMUEL NAMARA{tuple_delimiter}DURKE BATAGLANI{tuple_delimiter}Samuel Namara and Durke Bataglani were exchanged in the same hostage release{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}MEGGIE TAZBAH{tuple_delimiter}DURKE BATAGLANI{tuple_delimiter}Meggie Tazbah and Durke Bataglani were exchanged in the same hostage release{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}SAMUEL NAMARA{tuple_delimiter}FIRUZABAD{tuple_delimiter}Samuel Namara was a hostage in Firuzabad{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}MEGGIE TAZBAH{tuple_delimiter}FIRUZABAD{tuple_delimiter}Meggie Tazbah was a hostage in Firuzabad{tuple_delimiter}2)
-{record_delimiter}
-("relationship"{tuple_delimiter}DURKE BATAGLANI{tuple_delimiter}FIRUZABAD{tuple_delimiter}Durke Bataglani was a hostage in Firuzabad{tuple_delimiter}2)
+("relationship"{tuple_delimiter}[긴급] 서버 장애 대응 방안{tuple_delimiter}긴급 패치 배포 계획{tuple_delimiter}DISCUSSED{tuple_delimiter}메일 본문에서 긴급 패치 배포 계획을 주요 주제로 다룬다.{tuple_delimiter}9)
 {completion_delimiter}
 
-######################
+---
+
 -Real Data-
-######################
 Entity_types: {entity_types}
 Text: {input_text}
-######################
 Output:
