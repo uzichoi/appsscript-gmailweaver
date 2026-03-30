@@ -635,10 +635,10 @@ def upload():
 
                 if file_text and file_text.strip():
                     if mail_id:
-                        summarized = _summarize_attachment(file_text, original_name)  # 요약
+                        # 텍스트만 저장, 요약은 백그라운드에서 처리
                         attachment_texts_by_mail.setdefault(mail_id, []).append({
                             "name": original_name,
-                            "text": summarized
+                            "text": file_text.strip()
                         })
                     else:
                         failed_attachments.append({
@@ -660,14 +660,6 @@ def upload():
                 })
                 print(f"[UPLOAD][ATTACHMENT ERROR] {f_name}: {e}")
 
-       # 6) 메일별 블록 하단에 첨부 텍스트 삽입
-        final_content = content
-        if attachment_texts_by_mail:
-            final_content = _merge_attachments_into_mail_blocks(content, attachment_texts_by_mail)
-
-        with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
-            f.write(final_content)
-
     # 7) 파이프라인 실행
     print(f"[UPLOAD] Received filename: {filename}")
     print(f"[UPLOAD] Content length: {len(content)}")
@@ -681,24 +673,16 @@ def upload():
     skipped_count = 0 # 건너뛰는 메일 수
     saved_mail_path = "" # 최종 저장 파일 경로
 
-    # 전체 갱신: 새 content 전체를 기준으로 다시 씀
     if sync_mode == "rewrite":
-        final_content = content
-        if attachment_texts_by_mail:
-            final_content = _merge_attachments_into_mail_blocks(content, attachment_texts_by_mail)
-        # 이 전에 새로운 메일 추가해서 생긴 증분 텍스트 파일들 삭제
+        # 첨부 병합 없이 메일 본문만 저장 (첨부 요약+병합은 백그라운드에서 처리)
         _delete_incremental_files()
-
-        # 지금까지의 메일 데이터들 다 합친 mail_latest.txt 파일 생성
         with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
-            f.write(final_content.rstrip() + "\n")
-
+            f.write(content.rstrip() + "\n")
         saved_mail_path = MAIL_LATEST_PATH
         added_count = len(_split_mail_blocks(content))
 
     # 새 메일만 추가 append 모드
     else:
-        # 기존 mail_latest.txt에서 인덱싱된 메일 ID 추출해서 중복 방지
         existing_text = _read_latest_text()
         existing_ids = _extract_message_ids(existing_text)
         new_blocks = _split_mail_blocks(content)
@@ -706,39 +690,34 @@ def upload():
 
         for block in new_blocks:
             msg_id = _extract_mail_id_from_block(block)
-    
-            if not msg_id: # 메시지 id 없으면 건너뜀
+
+            if not msg_id:
                 skipped_count += 1
                 continue
 
-            if msg_id in existing_ids: # 메시지id 중복 (이미 인덱싱된 메일)이면 중복 저장 방지
+            if msg_id in existing_ids:
                 skipped_count += 1
                 continue
 
-            if msg_id in attachment_texts_by_mail: # 이 메일에 대한 첨부 텍스트 있으면 해당 블록에만 병합
+            if msg_id in attachment_texts_by_mail:
                 block = _merge_attachments_into_mail_blocks(
                     block,
                     {msg_id: attachment_texts_by_mail[msg_id]}
                 ).strip()
 
             append_blocks.append(block.strip())
-            existing_ids.add(msg_id) # 같은 요청 내 중복 방지를 위해 바로 id 등록
+            existing_ids.add(msg_id)
 
         added_count = len(append_blocks)
 
-        # 새 메일을 위쪽에 붙이고 기존 내용 유지
         if append_blocks:
             append_blocks.sort(key=_extract_block_for_sort, reverse=True)
-            # 블록들 빈 줄 2개로 구분해서 하나의 텍스트로 조합
             inc_content = "\n\n".join(append_blocks).strip() + "\n"
-            # 시간 기반 파일명으로 증분파일 저장
             inc_path = _build_incremental_path(filename)
             with open(inc_path, "w", encoding="utf-8") as f:
                 f.write(inc_content)
-
             saved_mail_path = inc_path
         else:
-            # 신규 메일 없으면 파일 저장 없이 넘어감
             saved_mail_path = ""
 
     print("[UPLOAD] added:", added_count)
@@ -767,9 +746,9 @@ def upload():
             print(f"[CLEAN] update_output 삭제 완료: {update_dir}")
         else:
             print(f"[CLEAN] update_output 없음: {update_dir}")
-        start_graph_pipeline_background(job_id, env) # GraphRAG 파이프라인 함수 실행
+        start_graph_pipeline_background(job_id, env, attachment_texts_by_mail) # GraphRAG 파이프라인 함수 실행
     else:
-        start_graph_update_pipeline_background(job_id, env)
+        start_graph_update_pipeline_background(job_id, env) 
 
     return jsonify({
             "ok": True,
