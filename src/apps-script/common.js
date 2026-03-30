@@ -1,8 +1,6 @@
 // src/apps-script/common.js
-
 var TunnelURL = "https://interatrial-tana-wishfully.ngrok-free.dev";    // ngrok로 열어둔 백엔드 서버(Flask/GraphRAG) 주소
 const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwAk_JabdKuGUHIVcaKeEnY1DUiYb0uqkiu-KdUG67Zf1U3D8k-F06RGS5043k_fZS8MQ/exec";   // Apps Script Web App으로 배포된 URL
-
 
 const OLIVE = "#c6d8a5";
 
