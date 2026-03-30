@@ -17,12 +17,12 @@ from config.settings import MAIL_BLOCK_SEP
 
 
 # 첨부파일 텍스트 요약 (공백/줄바꿈 제외 500자 미만이면 원문 그대로 반환)
-def _summarize_attachment_text(text: str, filename: str) -> str:
+def _summarize_attachment_text(text: str,paths, filename: str) -> str:
     pure_len = len(text.replace(" ", "").replace("\n", ""))
     if pure_len < 500:
         return text  # 짧은 텍스트는 요약 없이 그대로 반환
 
-    prompt_path = os.path.join("src", "parquet", "prompts", "summarize_attachment.txt")
+    prompt_path = os.path.join(paths.GRAPHRAG_ROOT, "prompts", "summarize_attachment.txt")
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt = f.read().strip()
 
@@ -281,7 +281,7 @@ def run_graph_pipeline(job_id,paths, env, attachment_texts_by_mail=None):
                 summarized_by_mail[mail_id] = [
                     {
                         "name": item["name"],
-                        "text": _summarize_attachment_text(item["text"], item["name"])
+                        "text": _summarize_attachment_text(item["text"],paths, item["name"])
                     }
                     for item in items
                 ]
