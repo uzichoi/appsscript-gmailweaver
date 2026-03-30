@@ -618,10 +618,6 @@ def upload():
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
 
-    # 4) mail_latest.txt 초기화
-    with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
-        f.write(content)
-
     extracted_count = 0
     failed_attachments = []
     saved_attachment_paths = []
@@ -691,15 +687,7 @@ def upload():
                     "name": f_name,
                     "reason": str(e)
                 })
-                print(f"[UPLOAD][ATTACHMENT ERROR] {f_name}: {e}")
-
-       # 6) 메일별 블록 하단에 첨부 텍스트 삽입
-        final_content = content
-        if attachment_texts_by_mail:
-            final_content = _merge_attachments_into_mail_blocks(content, attachment_texts_by_mail)
-
-        with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
-            f.write(final_content)  
+                print(f"[UPLOAD][ATTACHMENT ERROR] {f_name}: {e}")  
 
     # 7) 파이프라인 실행
     print(f"[UPLOAD] Received filename: {filename}")
@@ -770,6 +758,10 @@ def upload():
             inc_path = _build_incremental_path(filename)
             with open(inc_path, "w", encoding="utf-8") as f:
                 f.write(inc_content)
+
+            updated_content = inc_content + "\n" + existing_text
+            with open(MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
+                f.write(updated_content.strip() + "\n")
 
             saved_mail_path = inc_path
             _save_mail_contact_stats(append_blocks, mode="append")
