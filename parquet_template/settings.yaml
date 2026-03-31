@@ -18,7 +18,6 @@ models:
     model: text-embedding-3-small
     api_key: ${GRAPHRAG_API_KEY}
 
-
 llm:
   api_key: ${GRAPHRAG_API_KEY} # set this in the generated .env file
   type: openai_chat # or azure_openai_chat
@@ -40,7 +39,7 @@ embeddings:
   async_mode: threaded # or asyncio
   vector_store:
     type: lancedb
-    db_uri: 'output/lancedb'
+    db_uri: "output/lancedb"
     container_name: default
     overwrite: true
   llm:
@@ -63,11 +62,7 @@ input:
   file_pattern: ".*\\.txt$$"
 
 chunks:
-<<<<<<< HEAD
-  size: 1200
-=======
   size: 2000
->>>>>>> 103361371591463db6f9d27caa2b2a944835fae2
   overlap: 200
   group_by_columns: [id]
 
@@ -117,8 +112,6 @@ community_reports:
   max_length: 2000
   max_input_length: 8000
 
-<<<<<<< HEAD
-=======
 cluster_graph:
   max_cluster_size: 20
 
@@ -135,7 +128,6 @@ snapshots:
   embeddings: false
   transient: false
 
->>>>>>> 103361371591463db6f9d27caa2b2a944835fae2
 local_search:
   prompt: "prompts/local_search_system_prompt.txt"
   text_unit_prop: 0.3
@@ -148,8 +140,3 @@ global_search:
 
 drift_search:
   prompt: "prompts/drift_search_system_prompt.txt"
-<<<<<<< HEAD
-=======
-
-  
->>>>>>> 103361371591463db6f9d27caa2b2a944835fae2
