@@ -24,6 +24,7 @@ import olefile
 import csv
 from pptx import Presentation
 from openpyxl import load_workbook
+from flask import send_from_directory
 
 # Job 이용 공통함수 import
 from util.jobs.job_store import *
@@ -39,7 +40,9 @@ app = Flask(__name__)   # Flask 앱 객체 생성. 해당 파일이 서버의 �
 CORS(app)   # Cross-Origin Resource Sharing 허용 (다른 환경에서 이 서버의 API를 호출할 수 있도록)
 
 # Apps Script Web App URL (캘린더, 라벨 등 모든 프록시에서 공통 사용)
-WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz3bAOxML5BZSSJcMFM1or5jY8K4NVwliHk_Rbe9jXYVBXbYM05Fl-1bPG1909_38hZ/exec"
+
+WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxQN-o7ZKI-daT-D-8h9YLo63IUefp9ShJGpZxWEPwuh1A6gH6kNMrzwP07o46eh6WE/exec"
+
 
 # 한글 출력 시 깨지거나 에러 나는 것 방지 (utf-8 인코딩 및 대체 문자 처리)
 if hasattr(sys.stdout, "reconfigure"):
@@ -119,7 +122,7 @@ def _convert_to_calendar_json(text):
             response_format = {"type": "json_object"},  # JSON Mode 활성화
             messages = [
                 {
-                    "role": "system", # system 메시지: 모델의 역할과 출력 형식을 고정
+                    "role": "system",
                     "content": (
                         "너는 이메일 내용을 분석해서 캘린더 일정을 추출하는 도우미야."
                         "날짜/시간/일정 정보를 추출해서 반드시 JSON으로만 응답해. "
@@ -139,7 +142,6 @@ def _convert_to_calendar_json(text):
                 }
             ]
         )
-        # json.loads()로 파이썬 dict로 변환해서 반환
         return json.loads(response.choices[0].message.content)
     
     except Exception as e:
@@ -439,6 +441,7 @@ def _read_json_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
+
 # 이름+메일주소 형식에서 이름과 메일주소 분리하여 반환
 def _parse_contact(raw: str) -> tuple[str, str]:
         m = re.search(r"^(.*?)\s*<([^>]+)>", raw.strip())
@@ -524,9 +527,9 @@ def _is_index_ready(paths):
         return False
 
 # 엔드포인트: POST /extract-calendar
-@app.route('/extract-calendar', methods=['POST']) #→ GraphRAG를 완전히 우회하고 OpenAI에 직접 메일을 던지는 전용 엔드포인트를 만듦
+@app.route('/extract-calendar', methods=['POST'])
 def extract_calendar():     # 이메일 제목 + 본문에서 일정 이벤트를 추출하여 반환
-    data = request.json or {} 
+    data = request.json or {}
     subject = data.get('subject', '')
     body = data.get('body', '')
     result = _convert_to_calendar_json(f"제목: {subject}\n\n{body}")    # 제목과 본문을 합쳐 컨텍스트 제공
@@ -664,6 +667,7 @@ def upload():
 
     # 2) 저장 디렉토리 준비
 
+
     os.makedirs(paths.MAIL_DIR, exist_ok=True)
 
     # rewrite면 기존 첨부파일 먼저 전부 삭제
@@ -770,12 +774,15 @@ def upload():
         with open(paths.MAIL_LATEST_PATH, "w", encoding="utf-8") as f:
             f.write(content.rstrip() + "\n")
         saved_mail_path = paths.MAIL_LATEST_PATH
+
         added_count = len(_split_mail_blocks(content))
+
         added_count = len(_split_mail_blocks(content))
         _save_mail_contact_stats(_split_mail_blocks(content), paths, mode="rewrite")
 
     # 새 메일만 추가 append 모드
     else:
+
         # 기존 mail_latest.txt에서 인덱싱된 메일 ID 추출해서 중복 방지
         existing_text = _read_latest_text(paths)
         existing_ids = _extract_message_ids(existing_text)
@@ -820,7 +827,9 @@ def upload():
                 f.write(updated_content.strip() + "\n")
 
             saved_mail_path = inc_path
+
             _save_mail_contact_stats(append_blocks, paths, mode="append")
+
         else:
             saved_mail_path = ""
 
@@ -845,12 +854,14 @@ def upload():
 
 
     if sync_mode == "rewrite": # 전체 갱신할 때
+
         update_dir = os.path.join(paths.GRAPHRAG_ROOT, "update_output") # 이전에 증분 결과 있으면 폴더 삭제
         if os.path.exists(update_dir): 
             shutil.rmtree(update_dir)
             print(f"[CLEAN] update_output 삭제 완료: {update_dir}")
         else:
             print(f"[CLEAN] update_output 없음: {update_dir}")
+
         start_graph_pipeline_background(job_id,paths, env, attachment_texts_by_mail) # GraphRAG 파이프라인 함수 실행
 
     else:
@@ -874,22 +885,29 @@ def upload():
         })
 
 # 엔드포인트: GET /graph-data
-@app.route("/graph-data", methods=["GET"])
-def graph_data():   # parquet2json.py가 생성한 그래프 시각화 데이터를 반환
+@app.route("/graph-data", methods=["GET", "OPTIONS"])  # OPTIONS 추가 (CORS 프리플라이트)
+def graph_data():
+    if request.method == "OPTIONS":
+        return "", 200
+
     gmail_id = (request.args.get("gmail_id") or "").strip().lower()
 
     if not gmail_id:
         return jsonify({"ok": False, "error": "gmail_id가 비어있습니다."}), 400
 
-    paths = UserPaths(BASE_DIR, gmail_id) # 각 유저별 고유경로 설정
-
-    if not gmail_id:
-        return jsonify({"ok": False, "error": "gmail_id가 비어있습니다."}), 400
+    paths = UserPaths(BASE_DIR, gmail_id)  # 각 유저별 고유경로 설정
 
     if not os.path.exists(paths.GRAPH_JSON_PATH):
         return jsonify({"nodes": [], "edges": [], "error": "graph json not found"}), 200
-    with open(paths.GRAPH_JSON_PATH, "r", encoding="utf-8") as f: # 읽기 모드, 한글 깨짐 방지하기
-        return jsonify(json.load(f)) # parquet_data.json 파일 읽어서 파이썬 딕셔너리로 변환
+
+    try:
+        with open(paths.GRAPH_JSON_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        print(f"[GRAPH-DATA] 반환: {len(data.get('nodes', []))} 노드")  # 로그 추가
+        return jsonify(data)
+    except Exception as e:
+        print(f"[GRAPH-DATA] 에러: {e}")
+        return jsonify({"nodes": [], "edges": [], "error": str(e)}), 500
 
 # 엔드포인트: GET /graph-view
 @app.route("/graph-view", methods=["GET"])
@@ -899,7 +917,15 @@ def graph_view():
         os.path.join(os.path.dirname(__file__), "json"), # src/json/ 폴더
         "graph_view.html"
     )
-    
+
+# 공유 그래프 렌더링 함수 (graph_view.html 과 dashboard 양쪽에서 사용)
+@app.route('/graph-render.js')
+def graph_render_js():
+    return send_from_directory(
+        os.path.join(os.path.dirname(__file__), "json"),
+        "graph-render.js"
+    )
+
 # 엔드포인트: GET /index-status
 @app.route("/index-status", methods=["GET"])
 def index_status():     # GraphRAG 인덱싱 완료 여부 반환
@@ -915,7 +941,7 @@ def dashboard(path):
         path = 'production/' + path
     return send_from_directory(dist_dir, path)
 
-# dist 루트 정적 파일 서빙 (assets, js, fonts) 
+# dist 루트 정적 파일 서빙 (assets, js, fonts)
 @app.route('/assets/<path:path>')
 def static_assets(path):
     dist_dir = os.path.join(os.path.dirname(__file__), 'apps-script', 'web', 'dist', 'assets')
@@ -943,7 +969,7 @@ def calendar_events():
     except Exception:
         return jsonify({"events": [], "error": res.text[:200]}), 200
 
-# 엔드포인트: POST /labels-proxy (Apps Script 라벨 프록시-클라이언트의 요청을 대신 전해주는 중간 대리자)
+# 엔드포인트: POST /labels-proxy (Apps Script 라벨 프록시)
 @app.route('/labels-proxy', methods=['POST'])
 def labels_proxy():
     data = request.json or {}
@@ -956,6 +982,24 @@ def labels_proxy():
             return jsonify({"ok": False, "error": res.text[:200]}), 200
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
+import urllib.request
+
+@app.route('/dashboard/marker-icon.png')
+def marker_icon():
+    url = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png'
+    with urllib.request.urlopen(url) as r:
+        data = r.read()
+    from flask import Response
+    return Response(data, mimetype='image/png')
+
+@app.route('/dashboard/marker-shadow.png')
+def marker_shadow():
+    url = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png'
+    with urllib.request.urlopen(url) as r:
+        data = r.read()
+    from flask import Response
+    return Response(data, mimetype='image/png')
 
 # 서버 진입점
 if __name__ == '__main__':
