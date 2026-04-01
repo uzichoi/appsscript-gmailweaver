@@ -263,6 +263,7 @@ def build_graphrag_update(job_id,paths, env):
 
 # 전체 파이프라인 실행 (index 기준)
 
+
 def run_graph_pipeline(job_id,paths, env, attachment_texts_by_mail=None):
     print(f"[JOB][pipeline] START job_id={job_id}")
     append_job_log(job_id, "[START] run_graph_pipeline")
@@ -364,6 +365,7 @@ def start_graph_update_pipeline_background(job_id,paths, env):
         target=run_graph_update_pipeline, # 실행할 함수 : 그래프라그 업데이트파이프라인 실행 함수
         args=(job_id,paths, env.copy()),
         daemon=True,                      # app.py 종료 시 같이 종료
+
     )
     t.start()  # 스레드 실행 (비동기 시작)
 
