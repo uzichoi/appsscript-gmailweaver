@@ -31,6 +31,7 @@ from util.jobs.job_store import *
 from util.jobs.job_run import start_graph_pipeline_background, start_graph_update_pipeline_background
 from config.settings import *
 from util.user_path import UserPaths
+from util.database.db_reader import get_mail_stats, get_keyword_stats,get_mail_sync_stats,get_user_rating_stats,get_low_affinity_person_stats,get_high_affinity_person_stats
 
 # 환경변수 로드
 load_dotenv("src/parquet/.env") # src/parquet/.env를 사용하는 이유: GraphRAG 설정(settings.yaml)과 API 키가 같은 디렉터리에 위치하기 때문
@@ -40,9 +41,7 @@ app = Flask(__name__)   # Flask 앱 객체 생성. 해당 파일이 서버의 �
 CORS(app)   # Cross-Origin Resource Sharing 허용 (다른 환경에서 이 서버의 API를 호출할 수 있도록)
 
 # Apps Script Web App URL (캘린더, 라벨 등 모든 프록시에서 공통 사용)
-
 WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz3bAOxML5BZSSJcMFM1or5jY8K4NVwliHk_Rbe9jXYVBXbYM05Fl-1bPG1909_38hZ/exec"
-
 
 # 한글 출력 시 깨지거나 에러 나는 것 방지 (utf-8 인코딩 및 대체 문자 처리)
 if hasattr(sys.stdout, "reconfigure"):
@@ -1000,6 +999,122 @@ def marker_shadow():
         data = r.read()
     from flask import Response
     return Response(data, mimetype='image/png')
+
+# 웹앱용 가라데이터 라우트
+@app.route("/mail-stats", methods=["POST"])
+def send_mail_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_mail_stats()
+    })
+
+@app.route("/keyword-stats", methods=["POST"])
+def send_keyword_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_keyword_stats()
+    })
+
+@app.route("/high_affinity_person_stats", methods=["POST"])
+def send_high_affinity_person_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_high_affinity_person_stats()
+    })
+
+@app.route("/low_affinity_person_stats", methods=["POST"])
+def send_low_affinity_person_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_low_affinity_person_stats()
+    })
+
+@app.route("/user_rating_stats", methods=["POST"])
+def send_user_rating_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_user_rating_stats()
+    })
+
+@app.route("/mail_sync_stats", methods=["POST"])
+def send_mail_sync_stats():
+    data = request.json or {}
+
+    gmail_id = data.get("gmail_id", "").strip()
+
+    if not gmail_id:
+        return jsonify({"error": "gmail_id is required"}), 400
+
+    paths = UserPaths(BASE_DIR, gmail_id)
+
+    print(f"[MAIL_STATS] gmail_id={gmail_id}")
+    print(f"[MAIL_STATS] path={paths.USER_ROOT}")
+
+    return jsonify({
+        "gmail_id": gmail_id,
+        "data": get_mail_sync_stats()
+    })
+
 
 # 서버 진입점
 if __name__ == '__main__':
