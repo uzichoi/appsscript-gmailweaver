@@ -11,17 +11,19 @@ import networkx as nx
 from util.jobs.job_store import update_job, append_job_log
 from util.graphrag_progress import parse_graphrag_progress  # 현재 버전에서는 실시간 파싱에 사용 안 함
 from util.user_path import user_graphrag_init
+# from config.settings import GRAPH_BUILD_SCRIPT, GRAPHRAG_ROOT, BASE_DIR
+
 from config.settings import MAIL_BLOCK_SEP
 
 
-
 # 첨부파일 텍스트 요약 (공백/줄바꿈 제외 500자 미만이면 원문 그대로 반환)
-def _summarize_attachment_text(text: str, filename: str) -> str:
+def _summarize_attachment_text(text: str,paths, filename: str) -> str:
     pure_len = len(text.replace(" ", "").replace("\n", ""))
     if pure_len < 500:
         return text  # 짧은 텍스트는 요약 없이 그대로 반환
 
     prompt_path = os.path.join( "parquet_template", "prompts", "summarize_attachment.txt")
+
     with open(prompt_path, "r", encoding="utf-8") as f:
         prompt = f.read().strip()
 
@@ -262,12 +264,15 @@ def build_graphrag_update(job_id,paths, env):
 
 # 전체 파이프라인 실행 (index 기준)
 
-def run_graph_pipeline(job_id, paths,env, attachment_texts_by_mail=None):
+
+def run_graph_pipeline(job_id,paths, env, attachment_texts_by_mail=None):
     print(f"[JOB][pipeline] START job_id={job_id}")
     append_job_log(job_id, "[START] run_graph_pipeline")
 
+    user_graphrag_init(paths)
     try:
         update_job(job_id, progress=0, status="running", message="작업 시작")
+
         # 첨부파일 요약 후 mail_latest.txt에 병합 (백그라운드에서 처리)
         if attachment_texts_by_mail:
             print(f"[JOB][summarize] START job_id={job_id}")
@@ -279,7 +284,7 @@ def run_graph_pipeline(job_id, paths,env, attachment_texts_by_mail=None):
                 summarized_by_mail[mail_id] = [
                     {
                         "name": item["name"],
-                        "text": _summarize_attachment_text(item["text"], item["name"])
+                        "text": _summarize_attachment_text(item["text"],paths, item["name"])
                     }
                     for item in items
                 ]
@@ -288,8 +293,8 @@ def run_graph_pipeline(job_id, paths,env, attachment_texts_by_mail=None):
             _merge_summarized_attachments(paths.MAIL_LATEST_PATH, summarized_by_mail)
             print(f"[JOB][summarize] DONE job_id={job_id}")
 
-        build_graphrag_index(job_id,paths, env)  # 1단계: GraphRAG 인덱싱
-        build_graph_json(job_id,paths, env)  # 2단계: JSON 생성
+        build_graphrag_index(job_id,paths, env)
+        build_graph_json(job_id,paths, env)
 
 
         update_job(job_id, progress=100, status="done", message="인덱싱 완료")
@@ -309,6 +314,7 @@ def run_graph_update_pipeline(job_id, paths, env):
     print(f"[JOB][update-pipeline] START job_id={job_id}")
     append_job_log(job_id, "[START] run_graph_update_pipeline")
 
+    user_graphrag_init(paths)
     try:
         update_job(job_id, progress=0, status="running", message="업데이트 작업 시작")
 

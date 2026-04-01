@@ -18,7 +18,6 @@ models:
     model: text-embedding-3-small
     api_key: ${GRAPHRAG_API_KEY}
 
-
 llm:
   api_key: ${GRAPHRAG_API_KEY} # set this in the generated .env file
   type: openai_chat # or azure_openai_chat
@@ -40,7 +39,7 @@ embeddings:
   async_mode: threaded # or asyncio
   vector_store:
     type: lancedb
-    db_uri: 'output/lancedb'
+    db_uri: "output/lancedb"
     container_name: default
     overwrite: true
   llm:
@@ -63,7 +62,7 @@ input:
   file_pattern: ".*\\.txt$$"
 
 chunks:
-  size: 1200
+  size: 2000
   overlap: 200
   group_by_columns: [id]
 
@@ -112,6 +111,22 @@ community_reports:
   graph_prompt: "prompts/community_report.txt"
   max_length: 2000
   max_input_length: 8000
+
+cluster_graph:
+  max_cluster_size: 20
+
+embed_graph:
+  enabled: false # if true, will generate node2vec embeddings for nodes
+
+umap:
+  enabled: false # if true, will generate UMAP embeddings for nodes
+
+snapshots:
+  graphml: true
+  raw_entities: false
+  top_level_nodes: false
+  embeddings: false
+  transient: false
 
 local_search:
   prompt: "prompts/local_search_system_prompt.txt"
