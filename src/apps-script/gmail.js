@@ -152,7 +152,7 @@ function _runSync(mode) {
       // 새로운 메일만 추가 눌렀는데 인덱싱 안돼있어서 인덱싱 모드로 바뀌었으면
       return _toast("✅ 기존 인덱스가 없어 전체 인덱싱을 먼저 실행합니다.");
     }
-    return _toast("✅ " + count + "개 새 메일 전송 완료. 첨부파일 내용은 1시간 후 자동 처리됩니다.");
+    return _toast("✅ " + count + "개 새 메일 전송 완료. 첨부파일 내용은 메일 내용 인덱싱 후 자동 처리됩니다.");
   } catch (err) {
     return _toast("⚠️ 동기화 실패: " + err.message);
   }
@@ -542,7 +542,7 @@ function _dateToYmdHms(d) {
   );
 }
 
-// 1시간 트리거: 첨부파일 원본을 서버로 전송
+// 10분 트리거: 첨부파일 원본을 서버로 전송
 // Apps Script 트리거에서 자동 실행됨 (사용자 인터랙션 없음)
 function _runAttachmentSync() {
   try {

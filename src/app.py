@@ -854,7 +854,7 @@ def upload():
     saved_attachment_paths = []
     attachment_texts_by_mail: dict[str, list[dict]] = {}
 
-    # 4) 첨부파일 메타데이터만 기록 (원본은 1시간 트리거에서 별도 전송)
+    # 4) 첨부파일 메타데이터만 기록 (원본은 10분 트리거에서 별도 전송)
     # data_base64 없이 name, mime, mail_id만 수신하므로 텍스트 추출 없이 카운트만 집계
     for file_info in attachments:
         f_name = file_info.get("name") or "attachment.bin"
